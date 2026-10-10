@@ -12,8 +12,8 @@
 > own local socket. Every claim in this file carries a log line, a JSON excerpt or a
 > screenshot — and every known flaw stays listed.
 
-> 📘 **স্টেশন-ওভারভিউ:** এডিটর + সার্ভার দুই স্টেশনের মিলিত ভিত্তি-ডকুমেন্ট দেখো
-> [`docs/STATION-OVERVIEW.md`](docs/STATION-OVERVIEW.md) — সব কম্পোনেন্ট, MCP টুল, ক্লোন-রান ও প্রমাণ সহ।
+> 📘 **ওভারভিউ:** এই Extension + সার্ভার দুই অংশের মিলিত ভিত্তি-ডকুমেন্ট দেখো
+> [`docs/EXTENSION-OVERVIEW.md`](docs/EXTENSION-OVERVIEW.md) — সব কম্পোনেন্ট, MCP টুল, ক্লোন-রান ও প্রমাণ সহ।
 
 The server is the **server half of the Mission Barisal platform**: agents, tool bus,
 anti-dote chain, DB-backed telemetry, and a provider ladder (local → cloud) that any
