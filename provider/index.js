@@ -28,7 +28,7 @@ const opencode = require("./opencode");
 const validator = require("./validator");
 
 // Adapter keyed by WIRE dialect — not by vendor marketing name.
-// `openai` covers OpenAI, Cloudflare, vLLM, and every custom_N endpoint.
+// `openai` covers OpenAI, vLLM, and every custom_N endpoint.
 const ADAPTERS = {
   openai: openai,
   "openai-compatible": openai,
@@ -106,7 +106,6 @@ function configForId(id) {
                 key: env.GEMINI_API_KEY, type: "gemini" },
     ollama:   { baseUrl: env.OLLAMA_BASE, key: env.OLLAMA_API_KEY || env.OLLAMA_CLOUD_API_KEY,
                 type: "openai" },
-    cloudflare: { baseUrl: env.CF_BASE_URL, key: env.CF_API_TOKEN, type: "openai" },
   };
   if (P[id]) return Object.assign({ id: id }, P[id]);
 

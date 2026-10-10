@@ -48,7 +48,7 @@ Architected by **Monu — The Builder** (Mission Barisal persona).
    ┌─────────────────┐   ┌──────────────────────────────────────────┐
    │ cloud providers │   │ LOCAL LLM BRIDGE (local-llm-bridge.js)   │
    │ opencode·groq·  │   │  Unix socket ─┐                          │
-   │ gemini·cloudflare│  │  loopback TCP ─┼─► llama-server (RAM)    │
+   │ gemini·          │  │  loopback TCP ─┼─► llama-server (RAM)    │
    │ ollama·custom_* │   │  quirk layer   │   Llama-3.1-8B-Instruct   │
    └─────────────────┘   └────────────────┴──────────────────────────┘
 ```

@@ -159,7 +159,7 @@ open http://127.0.0.1:3000/              # অ্যাডমিন প্যা
 
 ### ৩.৪ প্রোভাইডার ল্যাডার (লোকাল → ক্লাউড)
 ```
-ollama (লোকাল, priority 9) → opencode → groq → gemini → cloudflare → custom_*
+ollama (লোকাল, priority 9) → opencode → groq → gemini → custom_*
 ```
 রাউটিং পলিসি `api.js`-এ: rate-limit cooldown, provider-hop (<3), model-hop,
 বাউন্ডারি reject → **fail-fast** (এখন আর infinite loop হয় না — নিচে §৩.১১ প্রমাণ)।

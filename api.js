@@ -878,20 +878,9 @@ const PROVIDER_CONFIG = {
     type: "gemini", // special: Gemini API (NOT OpenAI-compatible)
     models: parseModelsEnv(process.env.GEMINI_MODELS || ""),
   },
-  // ── Cloudflare (AI Gateway) ────────────────────────────
-  // OpenAI-compatible gateway. The account id is embedded in CF_BASE_URL,
-  // CF_API_TOKEN is used as the Bearer key, and models come from
-  // CF_PROVIDER_MODELS. Reads the same CF_* env vars the .env defines.
-  cloudflare: {
-    name: "Cloudflare",
-    baseUrl:
-      process.env.CF_BASE_URL ||
-      "https://api.cloudflare.com/client/v4/accounts/a23a4686369718f388aacac63c31d938/ai/v1",
-    key: process.env.CF_API_TOKEN || "",
-    priority: parseInt(process.env.CF_PRIORITY || "999", 10), // NaN-proof: unset → lowest
-    type: process.env.CF_TYPE || "openai",
-    models: parseModelsEnv(process.env.CF_PROVIDER_MODELS || ""),
-  },
+  // ── Cloudflare — REMOVED as a provider (2026-10-11, user request).
+  //    No CF_* env vars, no provider entry, no DB rows, no docs. The generic
+  //    CUSTOM_PROVIDER_N_* env mechanism covers any future OpenAI-compatible GW.
   // ── Ollama (Local + Cloud LLM) ─────────────────────────
   // First-class provider (NOT a custom_N provider). Serves local models
   // pulled via `ollama pull` AND cloud models (when the Ollama server's
@@ -926,6 +915,19 @@ function loadCustomProviders() {
     const prop = m[2].toLowerCase();
     if (seen.has(num)) continue;
     seen.add(num);
+
+    // 🧟 ENABLED handling (was documented in .env but NEVER read):
+    // CUSTOM_PROVIDER_N_ENABLED=false removes the provider entirely from
+    // PROVIDER_CONFIG (no auto-sync attempt, no model rows, no /api/v1/models).
+    const enabled = String(
+      process.env["CUSTOM_PROVIDER_" + num + "_ENABLED"] || "true"
+    ).toLowerCase() !== "false";
+    if (!enabled) {
+      console.log(
+        "[CUSTOM_PROVIDER_" + num + "] Disabled (ENABLED=false) — skipped",
+      );
+      continue;
+    }
 
     const name =
       process.env["CUSTOM_PROVIDER_" + num + "_NAME"] || "Custom-" + num;
@@ -17860,8 +17862,9 @@ init();
 //    R2T_ENABLED  - "true" (default local) runs r2t; "false" bypasses.
 //    R2T_MODULE   - custom path to the r2t module (default below).
 //    R2T_PORT     - passed through to the module (port for its server).
-//    R2T_URL      - open compatible URL the module talks to (default:
-//                   https://centers-red-asset-cultural.trycloudflare.com/v1)
+//    R2T_URL      - open compatible URL the module talks to. When the
+//                   external r2t module is absent (default), the builtin
+//                   basicR2tExecutor is used — no network call happens.
 //
 //  Returns an OpenAI-shaped object: { choices:[{message:{content}}], ...}
 // ══════════════════════════════════════════════════════════════════

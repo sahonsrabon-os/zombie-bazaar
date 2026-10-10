@@ -1245,12 +1245,6 @@
       "kind": "provider"
     },
     {
-      "id": "cloudflare:default",
-      "object": "model",
-      "provider": "Cloudflare",
-      "kind": "provider"
-    },
-    {
       "id": "nemotron-3-super",
       "object": "model",
       "provider": "Ollama",
