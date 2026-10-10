@@ -178,6 +178,10 @@ const {
 
 // ─── Config ──────────────────────────────────────────────────
 const PORT = parseInt(process.env.PORT || "3000", 10);
+const MAX_BODY_SIZE = parseInt(
+  process.env.MAX_BODY_SIZE || String(10 * 1024 * 1024),
+  10
+); // 🧟 body-size guard — readBody cap + pre-flight Content-Length 413
 // Unique per-process fingerprint — lets multi-instance tests prove that
 // two `node api.js` runs on one machine really are independent processes.
 const INSTANCE_ID = process.env.INSTANCE_ID || crypto.randomUUID();
@@ -10497,7 +10501,7 @@ async function executeMcpTool(tool, args) {
               res.on("data", (c) => (data += c));
               res.on("end", () => {
                 try {
-          const parsed = JSON.parse(_d);
+          const parsed = JSON.parse(data);
                   resolve({
                     content: parsed.content || [
                       { type: "text", text: JSON.stringify(parsed).slice(0, 50000) },
@@ -11666,11 +11670,24 @@ function getUnhealthyProviders() {
 // ══════════════════════════════════════════════════════════════
 //  HTTP SERVER
 // ══════════════════════════════════════════════════════════════
-function readBody(req) {
+function readBody(req, maxBytes = MAX_BODY_SIZE) {
   return new Promise((resolve) => {
     const chunks = [];
-    req.on("data", (c) => chunks.push(c));
-    req.on("end", () => resolve(Buffer.concat(chunks).toString()));
+    let size = 0;
+    let tooLarge = false;
+    // 🧟 BODY SIZE GUARD — consume (backpressure-safe) but stop buffering past the cap
+    req.on("data", (c) => {
+      size += c.length;
+      if (size > maxBytes) {
+        tooLarge = true;
+        return;
+      }
+      chunks.push(c);
+    });
+    req.on("end", () =>
+      resolve(tooLarge ? "" : Buffer.concat(chunks).toString())
+    );
+    req.on("error", () => resolve(""));
   });
 }
 
@@ -12259,6 +12276,16 @@ const server = http.createServer(async (req, res) => {
   const startTime = Date.now();
   const method = req.method;
   let url = req.url.split("?")[0];
+  // 🧟 BODY SIZE GUARD — reject oversized requests before any body read (413)
+  const declaredLen = parseInt(req.headers["content-length"] || "0", 10);
+  if (Number.isFinite(declaredLen) && declaredLen > MAX_BODY_SIZE) {
+    return jsonResponse(res, 413, {
+      error: {
+        message: "request body too large (limit " + MAX_BODY_SIZE + " bytes)",
+        type: "payload_too_large",
+      },
+    });
+  }
   // Normalize duplicate /v1 prefixes from older extension copies.
   // Some extension builds configure serverUrl as http://host:3000/v1
   // and then append "/api/..." or "/v1/..." directly, producing

@@ -111,6 +111,8 @@ const CFG = {
   ollamaUrl: process.env.BRIDGE_OLLAMA_URL || "http://127.0.0.1:11434",
   ctx: parseInt(process.env.BRIDGE_CTX || "512", 10),
   threads: parseInt(process.env.BRIDGE_THREADS || String(os.cpus().length), 10),
+  // 🧟 socket permission — default owner rw only (0o600); override via env
+  socketMode: parseInt(process.env.BRIDGE_SOCKET_MODE || "600", 8),
 };
 
 const UPSTREAM_BASE =
@@ -428,21 +430,38 @@ async function waitUpstreamReady(ms) {
 }
 
 // ── HTTP Utility Helpers ─────────────────────────────────────
-function cors(res) {
-  res.setHeader("Access-Control-Allow-Origin", "*");
+// 🧟 CORS hardening — reflect only allowed origins; default = loopback only.
+//    BRIDGE_ALLOWED_ORIGINS="*" restores the old any-origin behavior.
+function allowedOrigin(req) {
+  const src = req.headers.origin;
+  if (!src) return ""; // non-browser request — no CORS needed
+  const cfg = (process.env.BRIDGE_ALLOWED_ORIGINS || "").trim();
+  if (cfg === "*") return "*";
+  const list = cfg.split(",").map((s) => s.trim()).filter(Boolean);
+  if (list.includes("*")) return "*";
+  if (list.some((o) => src === o || src.startsWith(o + "/") || src.startsWith(o + ":"))) {
+    return src;
+  }
+  const isLoopback = /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/i.test(src);
+  return list.length === 0 && isLoopback ? src : "";
+}
+
+function cors(req, res) {
+  const origin = allowedOrigin(req);
+  if (origin) res.setHeader("Access-Control-Allow-Origin", origin);
   res.setHeader("Access-Control-Allow-Headers", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
 }
 
-function openaiError(res, status, message, type) {
+function openaiError(req, res, status, message, type) {
   const payload = JSON.stringify({
     error: { message: message, type: type || "bridge_error", code: null },
   });
   if (!res.headersSent) {
-    res.writeHead(status, {
-      "Content-Type": "application/json",
-      "Access-Control-Allow-Origin": "*",
-    });
+    const origin = req && req.headers ? allowedOrigin(req) : "";
+    const writeHeadOptions = { "Content-Type": "application/json" };
+    if (origin) writeHeadOptions["Access-Control-Allow-Origin"] = origin;
+    res.writeHead(status, writeHeadOptions);
   }
   res.end(payload);
 }
@@ -650,12 +669,12 @@ async function chatStream(body, req, res, transport) {
             const e = JSON.parse(buf);
             if (e && e.error && e.error.message) msg = e.error.message;
           } catch (_) {}
-          openaiError(res, upRes.statusCode >= 400 && upRes.statusCode < 600 ? upRes.statusCode : 502, msg, "upstream_error");
+          openaiError(req, res, upRes.statusCode >= 400 && upRes.statusCode < 600 ? upRes.statusCode : 502, msg, "upstream_error");
         });
         return;
       }
 
-      cors(res);
+      cors(req, res);
       res.writeHead(200, {
         "Content-Type": "text/event-stream; charset=utf-8",
         "Cache-Control": "no-cache",
@@ -723,7 +742,7 @@ async function chatStream(body, req, res, transport) {
   );
 
   upReq.on("timeout", () => upReq.destroy(new Error("upstream_timeout")));
-  upReq.on("error", (e) => openaiError(res, 502, "upstream: " + e.message, "upstream_error"));
+  upReq.on("error", (e) => openaiError(req, res, 502, "upstream: " + e.message, "upstream_error"));
   req.on("aborted", () => {
     try {
       upReq.destroy();
@@ -740,7 +759,7 @@ async function handler(req, res) {
   const url = (req.url || "/").split("?")[0];
 
   if (req.method === "OPTIONS") {
-    cors(res);
+    cors(req, res);
     res.writeHead(204);
     res.end();
     return;
@@ -748,7 +767,7 @@ async function handler(req, res) {
 
   if (req.method === "GET" && (url === "/health" || url === "/v1/health")) {
     const h = await upstreamHealth();
-    cors(res);
+    cors(req, res);
     res.writeHead(200, { "Content-Type": "application/json" });
     res.end(
       JSON.stringify({
@@ -764,7 +783,7 @@ async function handler(req, res) {
   }
 
   if (req.method === "GET" && (url === "/v1/models" || url === "/models")) {
-    cors(res);
+    cors(req, res);
     res.writeHead(200, { "Content-Type": "application/json" });
     res.end(
       JSON.stringify({
@@ -791,7 +810,7 @@ async function handler(req, res) {
       raw = await readBody(req);
     } catch (e) {
       log("WARN", "READ_BODY_FAIL", { error: e.message });
-      openaiError(res, 400, "failed to read request body", "invalid_request_error");
+      openaiError(req, res, 400, "failed to read request body", "invalid_request_error");
       return;
     }
 
@@ -800,12 +819,12 @@ async function handler(req, res) {
       body = JSON.parse(raw);
     } catch (_) {
       log("WARN", "JSON_PARSE_FAIL", { bodyHead: raw.slice(0, 100) });
-      openaiError(res, 400, "invalid JSON payload", "invalid_request_error");
+      openaiError(req, res, 400, "invalid JSON payload", "invalid_request_error");
       return;
     }
 
     if (!body || !Array.isArray(body.messages) || !body.messages.length) {
-      openaiError(res, 400, "'messages' must be a non-empty array", "invalid_request_error");
+      openaiError(req, res, 400, "'messages' must be a non-empty array", "invalid_request_error");
       return;
     }
 
@@ -814,17 +833,17 @@ async function handler(req, res) {
     } else {
       const resData = await chatNonStream(body, transport);
       if (!resData.ok) {
-        openaiError(res, resData.status, resData.message, resData.type);
+        openaiError(req, res, resData.status, resData.message, resData.type);
         return;
       }
-      cors(res);
+      cors(req, res);
       res.writeHead(200, { "Content-Type": "application/json" });
       res.end(JSON.stringify(resData.response));
     }
     return;
   }
 
-  openaiError(res, 404, "route not found: " + req.method + " " + url, "invalid_request_error");
+  openaiError(req, res, 404, "route not found: " + req.method + " " + url, "invalid_request_error");
 }
 
 // ── Application Lifecycle ─────────────────────────────────────
@@ -879,7 +898,7 @@ async function main() {
   });
   udsServer.listen(CFG.socket, () => {
     try {
-      fs.chmodSync(CFG.socket, 0o777);
+      fs.chmodSync(CFG.socket, CFG.socketMode);
     } catch (_) {}
     log("INFO", "UDS_SERVER_LISTENING", { socket: CFG.socket });
   });
