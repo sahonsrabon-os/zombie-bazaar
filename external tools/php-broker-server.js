@@ -61,6 +61,9 @@ function loadDotEnv() {
           if (k && process.env[k] === undefined) process.env[k] = v;
         }
         console.log("[ENV] Loaded: " + envPath);
+        // Stop at the FIRST .env found — never ingest .env files further up
+        // the tree (e.g. a stray C:\.env at the drive root). Mirrors start.js.
+        break;
       } catch (e) { /* ignore */ }
     }
     const next = path.dirname(dir);

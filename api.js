@@ -851,7 +851,7 @@ const PROVIDER_CONFIG = {
     name: "OpenCode",
     baseUrl: process.env.OPENCODE_BASE || "https://opencode.ai/zen/v1",
     key: process.env.OPENCODE_API_KEY || "",
-    priority: parseInt(process.env.OPENCODE_PRIORITY || "", 10),
+    priority: parseInt(process.env.OPENCODE_PRIORITY || "999", 10), // NaN-proof: unset → lowest
     type: process.env.OPENCODE_TYPE || "openai",
     models: parseModelsEnv(process.env.OPENCODE_MODELS || ""),
   },
@@ -862,7 +862,7 @@ const PROVIDER_CONFIG = {
     name: "Groq",
     baseUrl: process.env.GROQ_BASE || "https://api.groq.com/openai/v1",
     key: process.env.GROQ_API_KEY || "",
-    priority: parseInt(process.env.GROQ_PRIORITY || "", 10),
+    priority: parseInt(process.env.GROQ_PRIORITY || "999", 10), // NaN-proof: unset → lowest
     type: process.env.GROQ_TYPE || "openai",
     models: parseModelsEnv(process.env.GROQ_MODELS || ""),
   },
@@ -874,7 +874,7 @@ const PROVIDER_CONFIG = {
       process.env.GEMINI_BASE ||
       "https://generativelanguage.googleapis.com/v1beta",
     key: process.env.GEMINI_API_KEY || "",
-    priority: parseInt(process.env.GEMINI_PRIORITY || "", 10),
+    priority: parseInt(process.env.GEMINI_PRIORITY || "999", 10), // NaN-proof: unset → lowest
     type: "gemini", // special: Gemini API (NOT OpenAI-compatible)
     models: parseModelsEnv(process.env.GEMINI_MODELS || ""),
   },
@@ -888,7 +888,7 @@ const PROVIDER_CONFIG = {
       process.env.CF_BASE_URL ||
       "https://api.cloudflare.com/client/v4/accounts/a23a4686369718f388aacac63c31d938/ai/v1",
     key: process.env.CF_API_TOKEN || "",
-    priority: parseInt(process.env.CF_PRIORITY || "", 10),
+    priority: parseInt(process.env.CF_PRIORITY || "999", 10), // NaN-proof: unset → lowest
     type: process.env.CF_TYPE || "openai",
     models: parseModelsEnv(process.env.CF_PROVIDER_MODELS || ""),
   },
@@ -905,7 +905,7 @@ const PROVIDER_CONFIG = {
     // lives in OLLAMA_CLOUD_API_KEY (.env ships the cloud key there).
     // Local keyless servers ignore the Bearer header, so one fallback is safe.
     key: process.env.OLLAMA_API_KEY || process.env.OLLAMA_CLOUD_API_KEY || "",
-    priority: parseInt(process.env.OLLAMA_PRIORITY || "", 10),
+    priority: parseInt(process.env.OLLAMA_PRIORITY || "999", 10), // NaN-proof: unset → lowest
     type: process.env.OLLAMA_TYPE || "openai",
     models: parseModelsEnv(process.env.OLLAMA_MODELS || ""),
     local: true,
