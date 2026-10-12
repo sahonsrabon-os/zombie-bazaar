@@ -21,7 +21,7 @@ OpenAI-compatible client can consume. The browser admin panel manages models,
 providers, sessions, usage and per-tool switches at runtime.
 
 **Document produced by Sahon Srabon · Developer Zone · Dhaka, Bangladesh**
-[zombiecoder.my.id](http://127.0.0.1:3000/) · infi@zombiecoder.my.id
+[zombiecoder.my.id](http://127.0.0.1:5050/) · infi@zombiecoder.my.id
 Architected by **Monu — The Builder** (Mission Barisal persona).
 
 ---
@@ -130,26 +130,58 @@ point; re-enabling restores it.
 
 ---
 
+## OpenCode Plugin — `universal-bridge` (mission bootstrap)
+
+`universal-adapter/plugin/index.ts` — registered via `~/.opencode/opencode.json`
+→ `plugins`. On every OpenCode location it:
+
+1. **Bootstraps the mission layout** in that location's working directory —
+   `.zombiecoder/{SSOT.md, agents/syllabus.md, agents/memory.json,
+   agents/memory.archive.json, agents/sessions/}` — pure local fs, no server
+   needed. Existing knowledge is never overwritten (re-run reports nothing new).
+2. **Injects at runtime**: a `context` hook pushes a bounded digest of SSOT
+   (60%) + syllabus (40%) into every model call's system prompt (cap
+   `UNIVERSAL_MISSION_CONTEXT_CHARS`, default 4500 chars — the server's full
+   SSOT has been measured at ~650 KB / ~164k tokens); a `prompt` hook appends
+   every prompt to `memory.json` (last-5 window, server-compatible shape) plus
+   the append-only `memory.archive.json` JSONL.
+3. **Adopts the server working directory**: `set_working_dir` is a PRIVILEGED
+   MCP tool (`mcpGate` requires `Authorization: Bearer <MCP_ADMIN_TOKEN|ADMIN_API_KEY>`),
+   so the plugin calls `127.0.0.1:5050` **directly** with a token read at
+   runtime from env/`.env` — never hardcoded, never routed through the adapter
+   (which binds loopback with `Access-Control-Allow-Origin:*`). A throttled
+   drift-healing probe (default 10 min, fire-and-forget) re-adopts the active
+   session's directory when several locations raced on the server's single
+   global `mcpWorkingDir`.
+
+Evidence (2026-10-12): plugin test 37/37 (`node universal-adapter/plugin/test-plugin.mjs`);
+live session proved context injection in the system prompt and memory entries
+written per prompt; direct-token `set_working_dir` answered HTTP 200 and the
+server regenerated the project's `SSOT.md` (176 KB real scan).
+Full docs: [`universal-adapter/README.md`](universal-adapter/README.md).
+
+---
+
 ## Test Commands
 
 ### Health
 
 ```bash
-curl http://localhost:3000/health
-# {"healthy":true,"version":"3.2.1","agents":10,"models":<live>,...}
+curl http://localhost:5050/health
+# {"healthy":true,"version":"3.2.1","agents":9,"models":<live>,...}
 ```
 
 ### Models (real provider catalog for IDEs)
 
 ```bash
-curl http://localhost:3000/api/v0/models
+curl http://localhost:5050/api/v0/models
 # {"data":[{"id":"llama-local","owned_by":"local_llm"}, ... <live> models ...]}
 ```
 
 ### Chat with an agent (OpenAI format — model = agent id)
 
 ```bash
-curl -X POST http://localhost:3000/v1/chat/completions \
+curl -X POST http://localhost:5050/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d '{
     "model": "bug-hunter",
@@ -192,7 +224,7 @@ node start.js --start-all
 ```
 
 Terminates any previous instance itself and brings up the gateway plus worker ports.
-Admin panel: `http://localhost:3000/admin.html`.
+Admin panel: `http://localhost:5050/admin.html`.
 
 ### Step 2 — (Optional) Start the local LLM bridge
 
@@ -207,7 +239,7 @@ process and unlinks the socket.
 ### Step 3 — Verify
 
 ```bash
-curl http://localhost:3000/health          # server up
+curl http://localhost:5050/health          # server up
 curl http://127.0.0.1:11435/health         # bridge up, both transports listed
 ```
 
@@ -365,7 +397,7 @@ have to repeat.
 | S2 | **llama.cpp and Ollama stay separate processes.** Never merge the daemons; they are unified only at the identity layer behind the bridge. | Independent restart and lifetime; one clean OpenAI face for the gateway. |
 | S3 | **One local-model identity, answer line always attributable.** The bridge is that identity (socket + port); responses should carry an `upstream` tag naming the line that answered. | "Clean" is only acceptable when the answering line can still be traced. *Status: the tag itself is a proposal — the bridge serves one backend at a time today (`BRIDGE_BACKEND=auto`).* |
 | S4 | **The broker is an anti-corruption layer.** The gateway keeps speaking only the standard OpenAI dialect; all format translation lives in the broker; `api.js` gains no per-caller format branches; contract tests are the treaty. | Keeps the gateway independent of any single client. *Missing: a broker-side contract test.* |
-| S5 | **The gateway (port 3000) is the response-collection point.** Models talk only to the server; the companion UI is deferred — its backend answered in ~1.2 s while the frontend failed to render (UI-side issue, tracked separately). | Response collection first; presentation second. |
+| S5 | **The gateway (port 5050) is the response-collection point.** Models talk only to the server; the companion UI is deferred — its backend answered in ~1.2 s while the frontend failed to render (UI-side issue, tracked separately). | Response collection first; presentation second. |
 | S6 | **Canonical local model id is `llama-local`.** Agents and docs reference it; the defective IQ3_XS quant was deleted; Q4_K_M is the verified file. | Renaming the id would break existing agent rows. |
 | S7 | **Dual tool contract, stated explicitly.** Non-stream single-agent requests execute tools server-side (loop capped at MAX_ROUNDS, then a forced text final); streaming requests forward `tool_calls` deltas and do NOT execute — the client is the executor. | Observed live 2026-09-26 night: the non-stream path logged real `MCP_CALL` executions, while a stream round forwarded tool_call fragments with zero executions. |
 
@@ -613,7 +645,7 @@ monu_the_builder/
 
 ## Support
 
-- **Website**: [zombiecoder.my.id](http://127.0.0.1:3000/)
+- **Website**: [zombiecoder.my.id](http://127.0.0.1:5050/)
 - **Email**: infi@zombiecoder.my.id
 - **Issues**: [GitHub Issues](https://github.com/sahonsrabon-os/monu_the_builder/issues)
 

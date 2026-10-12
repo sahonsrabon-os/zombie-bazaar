@@ -138,12 +138,12 @@ cp .env.example .env          # Linux/macOS
 # ৩) রান
 node start.js                 # CONFIG ALL + START ALL (ইন্টারঅ্যাক্টিভ)
 # অথবা সরাসরি:
-node api.js                   # মূল গেটওয়ে (port 3000 + UDS/tcp-fallback + 3 external MCP)
+node api.js                   # মূল গেটওয়ে (port 5050 — .env-এ PORT, + UDS/tcp-fallback + 3 external MCP)
 
 # ৪) চেক
-curl http://127.0.0.1:3000/health        # → {"status":"ok",…}
-curl http://127.0.0.1:3000/identity      # → {domain, serverVersion, …}
-open http://127.0.0.1:3000/              # অ্যাডমিন প্যানেল
+curl http://127.0.0.1:5050/health        # → {"healthy":true,…}
+curl http://127.0.0.1:5050/identity      # → {domain, serverVersion, …}
+open http://127.0.0.1:5050/              # অ্যাডমিন প্যানেল
 ```
 
 ### ৩.৩ সার্ভারের প্রতিটি কম্পোনেন্ট (সব ফাইল, সব ভূমিকা)
@@ -234,7 +234,7 @@ ollama (লোকাল, priority 9) → opencode → groq → gemini → custom
 ### ৩.৮ পোর্ট ম্যাপ
 | পোর্ট | কী |
 |---|---|
-| **3000** (ডিফল্ট) / **5050** (বর্তমান ইনস্ট্যান্স) | মূল গেটওয়ে (OpenAI `/v1`, MCP HTTP/SSE, অ্যাডমিন UI) |
+| **5050** (বর্তমান, `.env`-এ `PORT=5050`) · ৩০০০ (শুধু `api.js` কোড-ফলব্যাক, ব্যবহার নয়) | মূল গেটওয়ে (OpenAI `/v1`, MCP HTTP/SSE, অ্যাডমিন UI) |
 | **3001** (TCP) / **5100** (UDS) | Windows-এ UDS নেই → TCP loopback fallback; Linux-এ UDS |
 | **3110** (ডিফল্ট 3100) | OCR MCP |
 | **3111** (ডিফল্ট 3101) | Screen Recorder MCP |
