@@ -125,14 +125,17 @@ point; re-enabling restores it.
 | HTTP JSON-RPC 2.0 | `POST /mcp` | newline/JSON-RPC (VS Code uses `http://localhost:5050/mcp`) |
 | SSE | `GET /mcp` | `endpoint` event + tool events |
 | WebSocket | HTTP upgrade on `/` | full-duplex messages |
-| Unix domain socket | `/tmp/zombiecoder-test/mcp.sock` (env `UDS_PATH`) | newline-delimited JSON-RPC (TCP fallback on Windows) |
+| Unix domain socket | `/tmp/zombiecoder/mcp.sock` | newline-delimited JSON-RPC (TCP fallback on Windows) |
 | OpenAI HTTP | `POST /v1/chat/completions`, `GET /v1/models` | chat completions, SSE streaming |
 
-> **UDS path note (2026-10-12):** the code default is
-> `/tmp/zombiecoder/mcp.sock`, but that path is held by the separate
-> monu_the_builder project (same default), so this instance sets
-> `UDS_PATH=/tmp/zombiecoder-test/mcp.sock` in `.env` to avoid the clash.
-> Verify the live owner with `ss -lxp | grep mcp.sock`.
+> **UDS path note (2026-10-12):** this instance now owns the default path
+> `/tmp/zombiecoder/mcp.sock` (verified live: 153 tools over the socket,
+> MCP working dir adopted). The separate monu_the_builder project
+> (which shares the same default) was moved to its own path
+> `/tmp/zombiecoder/monu.sock` via `UDS_PATH` in its `.env`, ending the
+> coexistence workaround where this server sat on
+> `/tmp/zombiecoder-test/mcp.sock`. Verify the live owner with
+> `ss -lxp | grep mcp.sock`.
 
 ---
 
@@ -200,7 +203,7 @@ curl -X POST http://localhost:5050/v1/chat/completions \
 
 ```bash
 printf '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}\n' \
-  | nc -U /tmp/zombiecoder-test/mcp.sock
+  | nc -U /tmp/zombiecoder/mcp.sock
 # {"jsonrpc":"2.0","id":1,"result":{"tools":[ ... every tool with inputSchema ... ]}}
 ```
 
@@ -558,7 +561,7 @@ llama-server v0.5.0-dev (build 11146) · n_ctx 16384 · RSS 8.5 GB (8B Q4_K_M)
 **8. Shared schema tools round-trip over MCP UDS**
 
 ```bash
-printf '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}\n' | nc -U /tmp/zombiecoder-test/mcp.sock
+printf '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}\n' | nc -U /tmp/zombiecoder/mcp.sock
 # tools over UDS: 153 at capture (point-in-time; varies with external MCPs) · every tool carries inputSchema
 ```
 

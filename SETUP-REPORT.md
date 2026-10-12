@@ -90,11 +90,11 @@ monu-র সার্ভার **ইতিমধ্যেই চালু** (PID
 |-----|------------------|----------------------|
 | `PORT` | 5000 | **5050** |
 | `UDS_PORT` | 5100 | **5150** |
-| `UDS_PATH` | `/tmp/zombiecoder/mcp.sock` | **`/tmp/zombiecoder-test/mcp.sock`** |
+| `UDS_PATH` | `/tmp/zombiecoder/monu.sock` | **`/tmp/zombiecoder/mcp.sock` (ডিফল্ট)** |
 | `BROKER_PORT` | 9998 | **9999** |
 | `BRIDGE_PORT` | 11435 | **11436** |
 
-> `mcp.sock` টা production-এর লাইভ সকেট — টেস্ট ইনস্ট্যান্স সেটা ধরতে পারতো, তাই আলাদা করা হয়েছে। **production সার্ভার সম্পূর্ণ অক্ষত, যাচাই করা।**
+> **২০২৬-১০-১২ হালনাগাদ:** আগে `mcp.sock` production-এর (monu) লাইভ সকেট ছিল, তাই টেস্ট ইনস্ট্যান্স আলাদা পাথে (`-test`) রাখা হয়েছিল। এখন **monu নিজের আলাদা পাথে সরে গেছে** (`UDS_PATH` in monu's `.env`), তাই ডিফল্ট `mcp.sock` ফিরে গেছে continue সার্ভারে। **দুই সার্ভারই যাচাই করা, দুটোই সুস্থ।**
 
 ---
 

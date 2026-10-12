@@ -57,9 +57,12 @@ if (args.indexOf(__dirname) === -1) continue;   // ← api.js:478
 |-----------|------------------|------------------|
 | `PORT` | 5000 | 5050 |
 | `UDS_PORT` | 5100 | 5150 |
-| `UDS_PATH` | `/tmp/zombiecoder/mcp.sock` | `/tmp/zombiecoder-test/mcp.sock` |
+| `UDS_PATH` | `/tmp/zombiecoder/monu.sock` | `/tmp/zombiecoder/mcp.sock` (ডিফল্ট) |
 | `BROKER_PORT` | 9998 | 9999 |
 | `BRIDGE_PORT` | 11435 | 11436 |
+
+> **২০২৬-১০-১২ পুনর্বিন্যাস:** UDS পাথ বদলে monu-কে নিজের `monu.sock` দেওয়া হয়েছে;
+> ডকুমেন্টেড ডিফল্ট `/tmp/zombiecoder/mcp.sock` এখন continue সার্ভারের।
 | `OCR_MCP_PORT` | 3100 | 3110 |
 | `SCREEN_MCP_PORT` | 3101 | 3111 |
 | `TTS_MCP_PORT` | 3102 | 3112 |

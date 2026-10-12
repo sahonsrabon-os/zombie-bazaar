@@ -48,7 +48,7 @@ curl http://127.0.0.1:5050/health
 | `GEMINI_API_KEY` | `<key>` | ক্লাউড |
 | `GROQ_API_KEY` | `<key>` | ⚠️ invalid key = fallback জ্যাম |
 | `OPENCODE_API_KEY` | `<key>` | |
-| `UDS_PATH` | `/tmp/zombiecoder-test/mcp.sock` (ডিফল্ট `/tmp/zombiecoder/mcp.sock` — monu_the_builder প্রজেক্টও ওই ডিফল্ট পাথ ব্যবহার করে, ধাক্কা এড়াতে `-test`-এ সরানো হয়েছে) | Linux MCP সকেট |
+| `UDS_PATH` | `/tmp/zombiecoder/mcp.sock` (ডিফল্ট; ২০২৬-১০-১২ থেকে monu_the_builder আলাদা পাথে `/tmp/zombiecoder/monu.sock`, তাই continue সার্ভার ডিফল্টে ফিরেছে) | Linux MCP সকেট |
 | `ADMIN_TOKEN` | `<password>` | না দিলে admin endpoint 401 |
 
 পুরো তালিকা: `.env.example` — সেখানে প্রতিটি ভেরিয়েবলের বাংলা ব্যাখ্যা আছে।
