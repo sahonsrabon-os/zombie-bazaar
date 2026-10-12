@@ -3,7 +3,7 @@
 ![Version](https://img.shields.io/badge/version-3.2.1-7c3aed)
 ![Platform](https://img.shields.io/badge/platform-Linux%20x86--64-2563eb)
 ![Node](https://img.shields.io/badge/Node-%E2%89%A5%2018-10b981)
-![MCP%20tools](https://img.shields.io/badge/MCP%20tools-152-f59e0b)
+![MCP%20tools](https://img.shields.io/badge/MCP%20tools-153-f59e0b)
 ![Agents](https://img.shields.io/badge/agents-10-ec4899)
 
 > **Where evidence meets conversation** — a zero-dependency Node.js server that speaks
@@ -89,12 +89,12 @@ A virtual `mission` model runs the multi-agent debate path
 
 ---
 
-## MCP Tools (152)
+## MCP Tools (153)
 
 One registry, one enable/disable switch, four transports — `tools/list` and
 `tools/call` behave identically everywhere. The full table with descriptions lives in
 [`docs/openai-tools.md`](docs/openai-tools.md); the machine-readable OpenAI
-function-calling conversion of all 152 tools is [`docs/openai-schema.json`](docs/openai-schema.json).
+function-calling conversion of all 153 tools is [`docs/openai-schema.json`](docs/openai-schema.json).
 
 | Group | Tools |
 |-------|-------|
@@ -107,7 +107,7 @@ function-calling conversion of all 152 tools is [`docs/openai-schema.json`](docs
 | Screen & OCR (external) | `screen-recorder__screen_record_start/status/stop/screenshot` · `ocr__ocr_crop/image/screenshot` |
 | Voice (external) | `tts__tts_play/speak/voices` |
 
-Live registry: **152 tools, all enabled**. Call/error counters are runtime stats; the docs-vs-registry claim is re-verified on every run by `tests/docs-claims.test.js`.
+Live registry: **153 tools, all enabled**. Call/error counters are runtime stats; the docs-vs-registry claim is re-verified on every run by `tests/docs-claims.test.js`.
 Disabling a tool drops it from `tools/list` and refuses `tools/call` at one choke
 point; re-enabling restores it.
 
@@ -125,8 +125,14 @@ point; re-enabling restores it.
 | HTTP JSON-RPC 2.0 | `POST /mcp` | newline/JSON-RPC (VS Code uses `http://localhost:5050/mcp`) |
 | SSE | `GET /mcp` | `endpoint` event + tool events |
 | WebSocket | HTTP upgrade on `/` | full-duplex messages |
-| Unix domain socket | `/tmp/zombiecoder/mcp.sock` | newline-delimited JSON-RPC (TCP fallback on Windows) |
+| Unix domain socket | `/tmp/zombiecoder-test/mcp.sock` (env `UDS_PATH`) | newline-delimited JSON-RPC (TCP fallback on Windows) |
 | OpenAI HTTP | `POST /v1/chat/completions`, `GET /v1/models` | chat completions, SSE streaming |
+
+> **UDS path note (2026-10-12):** the code default is
+> `/tmp/zombiecoder/mcp.sock`, but that path is held by the separate
+> monu_the_builder project (same default), so this instance sets
+> `UDS_PATH=/tmp/zombiecoder-test/mcp.sock` in `.env` to avoid the clash.
+> Verify the live owner with `ss -lxp | grep mcp.sock`.
 
 ---
 
@@ -194,8 +200,8 @@ curl -X POST http://localhost:5050/v1/chat/completions \
 
 ```bash
 printf '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}\n' \
-  | nc -U /tmp/zombiecoder/mcp.sock
-# {"jsonrpc":"2.0","id":1,"result":{"tools":[ ...36 tools with inputSchema... ]}}
+  | nc -U /tmp/zombiecoder-test/mcp.sock
+# {"jsonrpc":"2.0","id":1,"result":{"tools":[ ... every tool with inputSchema ... ]}}
 ```
 
 ### Local bridge (no auth header, any client)
@@ -552,8 +558,8 @@ llama-server v0.5.0-dev (build 11146) · n_ctx 16384 · RSS 8.5 GB (8B Q4_K_M)
 **8. Shared schema tools round-trip over MCP UDS**
 
 ```bash
-printf '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}\n' | nc -U /tmp/zombiecoder/mcp.sock
-# tools over UDS: 36 · every tool carries inputSchema
+printf '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}\n' | nc -U /tmp/zombiecoder-test/mcp.sock
+# tools over UDS: 153 at capture (point-in-time; varies with external MCPs) · every tool carries inputSchema
 ```
 
 **9. Session telemetry row (DB-backed)**

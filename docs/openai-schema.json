@@ -260,17 +260,52 @@
       "type": "function",
       "function": {
         "name": "browse_cdp",
-        "description": "Headless-browse a URL via Chrome DevTools Protocol over a PIPE (zero HTTP control channel — no port, no websocket). Fetches a page with headless Chrome and returns its text, HTML, title, or a screenshot. Use for reading local or remote web pages.",
+        "description": "Headless-browse a URL via Chrome DevTools Protocol over a PIPE (zero HTTP control channel — no port, no websocket). Opens a page with headless Chrome and returns text, HTML, title, a screenshot (saved to a temp file), computed styles, element queries, the page outline, links or console output. Use for reading AND visually inspecting local or remote pages.",
         "parameters": {
           "type": "object",
           "properties": {
             "url": {
               "type": "string",
-              "description": "Absolute URL to open: http://, https:// or file://"
+              "description": "Absolute URL to open: http://, https://, file:// or about:"
             },
             "action": {
               "type": "string",
-              "description": "What to return: text (default, readable page text) | html | title | screenshot (base64 png)"
+              "description": "What to return: text (default) | html | title | url | info | screenshot (viewport png) | screenshot_full (full-page png, saved to file) | eval | wait | query | styles | outline | links | console"
+            },
+            "expression": {
+              "type": "string",
+              "description": "JavaScript expression for action=eval (runs in the page)"
+            },
+            "selector": {
+              "type": "string",
+              "description": "CSS selector for action=query, styles or wait"
+            },
+            "wait_ms": {
+              "type": "number",
+              "description": "Milliseconds to wait after load before reading (for animations/JS)"
+            },
+            "limit": {
+              "type": "number",
+              "description": "Max items returned for query/links/console (default 25)"
+            },
+            "keep_open": {
+              "type": "boolean",
+              "description": "Keep one tab open across calls for multi-step inspection"
+            },
+            "viewport": {
+              "type": "object",
+              "description": "Viewport override {width,height,deviceScaleFactor}",
+              "properties": {
+                "width": {
+                  "type": "number"
+                },
+                "height": {
+                  "type": "number"
+                },
+                "deviceScaleFactor": {
+                  "type": "number"
+                }
+              }
             },
             "timeout_ms": {
               "type": "number",
@@ -596,7 +631,7 @@
       "type": "function",
       "function": {
         "name": "ocr__ocr_image",
-        "description": "[external:ocr] Extract text from an image file (PNG, JPG, BMP, TIFF, PDF). Uses Tesseract OCR. Supports Bengali + English.",
+        "description": "[external:ocr] Extract text from an image file (PNG, JPG, BMP, TIFF, PDF). Bengali+English by default. Use `crop` to read a region, `scale` to enlarge small text, `preprocess` for hard scans, `psm` for layout modes, `with_confidence` for a quality score.",
         "parameters": {
           "type": "object",
           "properties": {
@@ -606,17 +641,48 @@
             },
             "langs": {
               "type": "string",
-              "description": "Tesseract language codes (default: eng). E.g. 'eng', 'ben', 'eng+ben+ara'"
+              "description": "Tesseract language codes. Default 'eng+ben'. e.g. 'eng', 'ben', 'eng+ben'"
             },
             "preprocess": {
               "type": "string",
               "enum": [
                 "none",
+                "gray",
                 "threshold",
                 "sharpen",
                 "denoise"
               ],
-              "description": "Image preprocessing mode (default: none)"
+              "description": "Image enhancement before OCR (default none). ffmpeg-backed."
+            },
+            "scale": {
+              "type": "number",
+              "description": "Upscale factor before OCR (default 2). 1 disables. 3-4 for tiny text."
+            },
+            "psm": {
+              "type": "string",
+              "description": "Tesseract page segmentation mode 0-13 (e.g. '6' single block, '11' sparse text)"
+            },
+            "crop": {
+              "type": "object",
+              "description": "Optional {x,y,width,height} region to OCR",
+              "properties": {
+                "x": {
+                  "type": "number"
+                },
+                "y": {
+                  "type": "number"
+                },
+                "width": {
+                  "type": "number"
+                },
+                "height": {
+                  "type": "number"
+                }
+              }
+            },
+            "with_confidence": {
+              "type": "boolean",
+              "description": "Also return mean word confidence and low-confidence words"
             }
           },
           "required": [
@@ -628,29 +694,8 @@
     {
       "type": "function",
       "function": {
-        "name": "ocr__ocr_screenshot",
-        "description": "[external:ocr] Take a screenshot of the screen and extract text via OCR. Uses ffmpeg x11grab + Tesseract.",
-        "parameters": {
-          "type": "object",
-          "properties": {
-            "region": {
-              "type": "string",
-              "description": "Capture region: 'full' (default), or 'WxH+X+Y' (e.g. '1920x1080+0+0')"
-            },
-            "langs": {
-              "type": "string",
-              "description": "Tesseract language codes (default: eng)"
-            }
-          },
-          "required": []
-        }
-      }
-    },
-    {
-      "type": "function",
-      "function": {
         "name": "ocr__ocr_crop",
-        "description": "[external:ocr] Crop a region from an image and extract text. Useful for reading specific parts of screenshots.",
+        "description": "[external:ocr] Crop a region from an image and extract text (ffmpeg based — no ImageMagick needed).",
         "parameters": {
           "type": "object",
           "properties": {
@@ -676,7 +721,21 @@
             },
             "langs": {
               "type": "string",
-              "description": "Tesseract language codes"
+              "description": "Tesseract language codes (default eng+ben)"
+            },
+            "scale": {
+              "type": "number",
+              "description": "Upscale factor after crop (default 2)"
+            },
+            "preprocess": {
+              "type": "string",
+              "enum": [
+                "none",
+                "gray",
+                "threshold",
+                "sharpen",
+                "denoise"
+              ]
             }
           },
           "required": [
@@ -685,6 +744,81 @@
             "y",
             "width",
             "height"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "ocr__ocr_screenshot",
+        "description": "[external:ocr] Screenshot the X11 display (ffmpeg x11grab) and OCR it. Region 'full' or 'WxH+X+Y'.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "region": {
+              "type": "string",
+              "description": "Capture region: 'full' (default) or 'WxH+X+Y' (e.g. '1920x1080+0+0')"
+            },
+            "langs": {
+              "type": "string",
+              "description": "Tesseract language codes (default eng+ben)"
+            },
+            "scale": {
+              "type": "number",
+              "description": "Upscale factor (default 2)"
+            },
+            "preprocess": {
+              "type": "string",
+              "enum": [
+                "none",
+                "gray",
+                "threshold",
+                "sharpen",
+                "denoise"
+              ]
+            }
+          },
+          "required": []
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "ocr__ocr_batch",
+        "description": "[external:ocr] OCR many images in one call (max 50). Same options as ocr_image.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "paths": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Image paths"
+            },
+            "langs": {
+              "type": "string",
+              "description": "Tesseract language codes (default eng+ben)"
+            },
+            "preprocess": {
+              "type": "string",
+              "enum": [
+                "none",
+                "gray",
+                "threshold",
+                "sharpen",
+                "denoise"
+              ]
+            },
+            "scale": {
+              "type": "number",
+              "description": "Upscale factor (default 2)"
+            }
+          },
+          "required": [
+            "paths"
           ]
         }
       }
@@ -4009,12 +4143,6 @@
       "kind": "provider"
     },
     {
-      "id": "canopylabs/orpheus-arabic-saudi",
-      "object": "model",
-      "provider": "Groq",
-      "kind": "provider"
-    },
-    {
       "id": "allam-2-7b",
       "object": "model",
       "provider": "Groq",
@@ -4027,7 +4155,13 @@
       "kind": "provider"
     },
     {
-      "id": "whisper-large-v3",
+      "id": "openai/gpt-oss-safeguard-20b",
+      "object": "model",
+      "provider": "Groq",
+      "kind": "provider"
+    },
+    {
+      "id": "canopylabs/orpheus-arabic-saudi",
       "object": "model",
       "provider": "Groq",
       "kind": "provider"
@@ -4039,7 +4173,7 @@
       "kind": "provider"
     },
     {
-      "id": "openai/gpt-oss-safeguard-20b",
+      "id": "meta-llama/llama-prompt-guard-2-22m",
       "object": "model",
       "provider": "Groq",
       "kind": "provider"
@@ -4051,7 +4185,7 @@
       "kind": "provider"
     },
     {
-      "id": "meta-llama/llama-prompt-guard-2-22m",
+      "id": "whisper-large-v3",
       "object": "model",
       "provider": "Groq",
       "kind": "provider"
@@ -4476,19 +4610,19 @@
       "id": "code-guru",
       "name": "কোড গুরু - মনু",
       "role": "architecture",
-      "model": "llama3-groq-tool-use:8b"
+      "model": "deepseek-r1:1.5b"
     },
     {
       "id": "bug-hunter",
       "name": "বাগ হান্টার - জুয়েল",
       "role": "debugging",
-      "model": "llama3-groq-tool-use:8b"
+      "model": "qwen2.5:1.5b"
     },
     {
       "id": "security-hero",
       "name": "সিকিউরিটি হিরো - বাবলু",
       "role": "security",
-      "model": "qwen/qwen3.8-27b"
+      "model": "qwen2.5:1.5b"
     },
     {
       "id": "perf-wizard",
@@ -4512,7 +4646,7 @@
       "id": "team-heart",
       "name": "টিম হার্ট - জারা",
       "role": "general",
-      "model": "deepseek-r1:1.5b"
+      "model": "openai/gpt-oss-20b"
     },
     {
       "id": "customer-experience-specialist",
@@ -4527,6 +4661,6 @@
       "model": "gemini-3.6-flash"
     }
   ],
-  "generated_utc": "2026-10-12T02:50:02Z",
+  "generated_utc": "2026-10-12T08:08:19Z",
   "generator": "tools/gen-openai-docs.js (live gateway)"
 }

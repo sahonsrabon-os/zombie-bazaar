@@ -908,6 +908,17 @@ const PROVIDER_CONFIG = {
     key: process.env.OLLAMA_API_KEY || process.env.OLLAMA_CLOUD_API_KEY || "",
     priority: parseInt(process.env.OLLAMA_PRIORITY || "999", 10), // NaN-proof: unset → lowest
     type: process.env.OLLAMA_TYPE || "openai",
+    // 🧟 DIALECT_FIX (2026-10-12): `type` alone CANNOT pick the wire dialect.
+    // adapterFor() (provider/index.js) matches by provider ID before `type`,
+    // so id "ollama" always reached provider/ollama.js — and that adapter
+    // defaults to the NATIVE /api/chat. Any OpenAI-compatible endpoint
+    // (local-llm-bridge, LM Studio, vLLM, Ollama's own /v1) therefore got a
+    // 404 "no route for POST /api/chat" in ~1ms and silently fell through to
+    // the cloud fallback. Evidence: OLLAMA_BASE=http://127.0.0.1:11435/v1
+    // (the bridge) + log 07:28:55 `no route for POST /api/chat`.
+    // Set OLLAMA_DIALECT=openai to route through {base}/v1/chat/completions.
+    // Unset ⇒ "" (falsy) ⇒ adapterFor() falls through exactly as before.
+    dialect: process.env.OLLAMA_DIALECT || "",
     models: parseModelsEnv(process.env.OLLAMA_MODELS || ""),
     local: true,
   },
@@ -9439,16 +9450,45 @@ const MCP_TOOLS = {
   },
   browse_cdp: {
     description:
-      "Headless-browse a URL via Chrome DevTools Protocol over a PIPE (zero HTTP control channel — no port, no websocket). Fetches a page with headless Chrome and returns its text, HTML, title, or a screenshot. Use for reading local or remote web pages.",
+      "Headless-browse a URL via Chrome DevTools Protocol over a PIPE (zero HTTP control channel — no port, no websocket). Opens a page with headless Chrome and returns text, HTML, title, a screenshot (saved to a temp file), computed styles, element queries, the page outline, links or console output. Use for reading AND visually inspecting local or remote pages.",
     params: {
       url: {
         type: "string",
-        description: "Absolute URL to open: http://, https:// or file://",
+        description: "Absolute URL to open: http://, https://, file:// or about:",
       },
       action: {
         type: "string",
         description:
-          "What to return: text (default, readable page text) | html | title | screenshot (base64 png)",
+          "What to return: text (default) | html | title | url | info | screenshot (viewport png) | screenshot_full (full-page png, saved to file) | eval | wait | query | styles | outline | links | console",
+      },
+      expression: {
+        type: "string",
+        description: "JavaScript expression for action=eval (runs in the page)",
+      },
+      selector: {
+        type: "string",
+        description: "CSS selector for action=query, styles or wait",
+      },
+      wait_ms: {
+        type: "number",
+        description: "Milliseconds to wait after load before reading (for animations/JS)",
+      },
+      limit: {
+        type: "number",
+        description: "Max items returned for query/links/console (default 25)",
+      },
+      keep_open: {
+        type: "boolean",
+        description: "Keep one tab open across calls for multi-step inspection",
+      },
+      viewport: {
+        type: "object",
+        description: "Viewport override {width,height,deviceScaleFactor}",
+        properties: {
+          width: { type: "number" },
+          height: { type: "number" },
+          deviceScaleFactor: { type: "number" },
+        },
       },
       timeout_ms: {
         type: "number",
@@ -10452,6 +10492,10 @@ async function executeMcpTool(tool, args) {
       // 🧟 #7: headless Chrome over --remote-debugging-pipe (fd 3/4, \0-framed
       // JSON). Zero HTTP/TCP/WebSocket in the CONTROL channel — module does
       // not open a single socket itself.
+      // v2: forwards the extra inspection options (expression/selector/…) and
+      // returns the whole structured result. Screenshots are written to a PNG
+      // file (path returned) so OCR can read them; the legacy `screenshot`
+      // action still inlines base64 for backward compatibility.
       const cdpUrl = args.url || "";
       const cdpAction = args.action || "text";
       try {
@@ -10459,32 +10503,23 @@ async function executeMcpTool(tool, args) {
         const r = await browseCdp({
           url: cdpUrl,
           action: cdpAction,
+          expression: args.expression,
+          selector: args.selector,
+          wait_ms: args.wait_ms,
+          limit: args.limit,
+          keep_open: args.keep_open,
+          viewport: args.viewport,
           timeout_ms: args.timeout_ms,
         });
-        let out;
-        if (cdpAction === "screenshot") {
-          out = {
-            ok: true,
-            url: r.url,
-            title: r.title,
-            note: "base64 PNG follows",
-            png_base64: r.png_base64 || "",
-          };
-        } else {
-          const cap = s => (s || "").length > 40000 ? s.slice(0, 40000) + "\n…[truncated]" : s;
-          out = {
-            ok: r.ok,
-            url: r.url,
-            title: r.title,
-            action: cdpAction,
-            result:
-              cdpAction === "html"
-                ? cap(r.html)
-                : cdpAction === "title"
-                ? r.title
-                : cap(r.text),
-            transport: "cdp-pipe (fd3/4, no HTTP control channel)",
-          };
+        const out = {
+          ...r,
+          transport: "cdp-pipe (fd3/4, no HTTP control channel)",
+        };
+        if (out.text && out.text.length > 40000) out.text = out.text.slice(0, 40000) + "\n…[truncated]";
+        if (out.html && out.html.length > 40000) out.html = out.html.slice(0, 40000) + "\n…[truncated]";
+        // legacy: keep base64 for the plain "screenshot" action only.
+        if (cdpAction === "screenshot" && r.screenshot_path) {
+          try { out.png_base64 = fs.readFileSync(r.screenshot_path).toString("base64"); } catch (_) {}
         }
         return { content: [{ type: "text", text: JSON.stringify(out) }] };
       } catch (e) {

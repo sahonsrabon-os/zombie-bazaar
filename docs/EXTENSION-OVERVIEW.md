@@ -53,7 +53,7 @@ VS Code-এর `contributes.languageModelChatProviders` কন্ট্রাক
 ZombieCoder চ্যাট প্রোভাইডার + ইনলাইন কমপ্লিশন। ব্র্যান্ডিং সম্পূর্ণ ডাইনামিক
 (`src/branding.ts` — `getProductName()` = "ZombieCoder", `getPlatformName()` = "Mission Barisal"),
 কোনো হার্ডকোড URL নেই (`src/config/endpoints.ts`), ট্রান্সপোর্ট ক্রস-প্ল্যাটফর্ম
-(Windows: `\\.\pipe\zombiecoder-mcp` · Linux: UDS `<tmpdir>/zombiecoder/mcp.sock`),
+(Windows: `\\.\pipe\zombiecoder-mcp` · Linux: UDS `<tmpdir>/zombiecoder/mcp.sock` — বর্তমান ইনস্ট্যান্সে env `UDS_PATH` দিয়ে `/tmp/zombiecoder-test/mcp.sock`-এ সরানো আছে, কারণ monu_the_builder ডিফল্ট পাথ দখল রাখে),
 Microsoft-এর অফিসিয়াল ডক অনুযায়ী `managementCommand` → `contributes.commands` লিংকড।
 
 - **৭টি কমান্ড:** `manage` (গেটওয়ে কনফিগ), `testConnection`, `refreshModels`, `editCustomHeaders`, `showOutput`, `resetAll` (সব রিসেট), `openWorkingDirectory` (ফোল্ডার বেছে ওয়ার্কিংডিরেক্টরি সেট → `.zombiecoder` (SSOT+সিলেবাস+মেমরি) তৈরি + MCP `set_working_dir` কল)
@@ -235,7 +235,7 @@ ollama (লোকাল, priority 9) → opencode → groq → gemini → custom
 | পোর্ট | কী |
 |---|---|
 | **5050** (বর্তমান, `.env`-এ `PORT=5050`) · ৩০০০ (শুধু `api.js` কোড-ফলব্যাক, ব্যবহার নয়) | মূল গেটওয়ে (OpenAI `/v1`, MCP HTTP/SSE, অ্যাডমিন UI) |
-| **3001** (TCP) / **5100** (UDS) | Windows-এ UDS নেই → TCP loopback fallback; Linux-এ UDS |
+| **5150** (TCP fallback, env `UDS_PORT`) / **`/tmp/zombiecoder-test/mcp.sock`** (Linux UDS, env `UDS_PATH`) | Windows-এ UDS নেই → TCP loopback fallback; Linux-এ UDS (ডিফল্ট পাথ monu_the_builder দখলে, তাই `-test`-এ) |
 | **3110** (ডিফল্ট 3100) | OCR MCP |
 | **3111** (ডিফল্ট 3101) | Screen Recorder MCP |
 | **3112** (ডিফল্ট 3102) | TTS MCP |
