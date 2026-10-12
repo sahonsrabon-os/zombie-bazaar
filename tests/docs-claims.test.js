@@ -19,7 +19,7 @@ const net = require("net");
 const { spawnSync } = require("child_process");
 
 const ROOT = path.join(__dirname, "..");
-const BASE = process.env.GATEWAY_BASE || "http://127.0.0.1:3000";
+const BASE = process.env.GATEWAY_BASE || "http://127.0.0.1:5050";
 
 // /api/admin/* is FAIL-CLOSED (ADMIN_TOKEN required — security fix). The test
 // runs locally on the same box, so it authenticates with the local .env token.
@@ -69,9 +69,20 @@ async function rpc(method, params) {
 }
 
 // README claims a working UDS tools/list example — prove it over the socket.
+// The socket path is CONFIG (`.env UDS_PATH`), not a constant: on machines
+// where another project's gateway owns the default `/tmp/zombiecoder/mcp.sock`,
+// this server deliberately listens on its own path (see SETUP-REPORT.md).
+// Hardcoding the default here made C5 probe the WRONG server's socket.
+const UDS_SOCKET = (function () {
+  try {
+    const m = fs.readFileSync(path.join(ROOT, ".env"), "utf8").match(/^UDS_PATH=(.+)$/m);
+    if (m && m[1].trim()) return m[1].trim();
+  } catch (e) {}
+  return "/tmp/zombiecoder/mcp.sock";
+})();
 function udsToolCount(expected) {
   return new Promise((resolve) => {
-    const sock = "/tmp/zombiecoder/mcp.sock";
+    const sock = UDS_SOCKET;
     if (!fs.existsSync(sock)) return resolve(false);
     let settled = false;
     const done = (v) => {
@@ -249,7 +260,13 @@ async function main() {
       .map((f) => path.join(ROOT, "docs", f)),
   ];
   const BANGLA = /[\u0980-\u09FF]/;
-  const bangla = docFiles.filter((f) => BANGLA.test(fs.readFileSync(f, "utf8")));
+  // Learning-First policy: these docs are INTENTIONALLY Bengali (user-facing
+  // overview + persona/principles sources). English-only still applies to
+  // every other README/docs file.
+  const BENGALI_OK = new Set(["EXTENSION-OVERVIEW.md", "No Evidence.md", "SSOT Principles.md"]);
+  const bangla = docFiles.filter(
+    (f) => !BENGALI_OK.has(path.basename(f)) && BANGLA.test(fs.readFileSync(f, "utf8")),
+  );
   assert(
     "C11 zero Bengali glyphs in README/docs",
     bangla.length === 0,

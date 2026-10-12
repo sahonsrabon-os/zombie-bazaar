@@ -26,6 +26,7 @@ const gemini = require("./gemini");
 const ollama = require("./ollama");
 const opencode = require("./opencode");
 const validator = require("./validator");
+const zclog = require("../lib/zc-log");
 
 // Adapter keyed by WIRE dialect — not by vendor marketing name.
 // `openai` covers OpenAI, vLLM, and every custom_N endpoint.
@@ -134,8 +135,25 @@ function configForId(id) {
 function normalizeMessages(messages) {
   if (!Array.isArray(messages)) return messages;
   return messages.map(function (m) {
-    if (!m || typeof m !== "object" || !Array.isArray(m.content)) return m;
-    const text = m.content
+    if (!m || typeof m !== "object") return m;
+
+    // ── Outbound sanitiser ──────────────────────────────────────────────
+    // `reasoning_content` / `reasoning` / `thinking` are RESPONSE fields
+    // that several upstreams emit. They get stored in the session history
+    // and then replayed verbatim on the next turn, at which point strict
+    // providers reject the whole request:
+    //     'messages.N' : for 'role:assistant' the following must be
+    //     satisfied[('messages.N' : property 'reasoning_content' is
+    //     unsupported)]
+    // Strip them before anything leaves the server. They are never needed
+    // upstream, and their absence is harmless everywhere.
+    const out = Object.assign({}, m);
+    delete out.reasoning_content;
+    delete out.reasoning;
+    delete out.thinking;
+
+    if (!Array.isArray(out.content)) return out;
+    out.content = out.content
       .filter(function (p) {
         return p && (typeof p === "string" || p.type === "text");
       })
@@ -143,7 +161,7 @@ function normalizeMessages(messages) {
         return typeof p === "string" ? p : p.text || "";
       })
       .join("\n");
-    return Object.assign({}, m, { content: text });
+    return out;
   });
 }
 
@@ -152,7 +170,7 @@ function normalizeMessages(messages) {
 //         tools, tool_choice, capabilities:{tools,media,stream} }
 // Returns { ok, content, tool_calls, reasoning_content, normalized, raw,
 //           provider, model, error, rate_limited }
-async function chat(opts) {
+async function chatImpl(opts) {
   const cfg = resolveConfig(opts.config || opts.providerId);
   const adapter = adapterFor(cfg);
   const providerId = cfg.id || opts.providerId || adapter.id;
@@ -265,7 +283,7 @@ async function chat(opts) {
 
 // ─── Public: streaming chat ───────────────────────────────────────────
 // onDelta receives OpenAI chat.completion.chunk objects (already normalized).
-async function chatStream(opts, onDelta) {
+async function chatStreamImpl(opts, onDelta) {
   const cfg = resolveConfig(opts.config || opts.providerId);
   const adapter = adapterFor(cfg);
   const providerId = cfg.id || opts.providerId || adapter.id;
@@ -380,6 +398,67 @@ async function listModels(providerIdOrCfg) {
   } catch (e) {
     return { ok: false, error: e.message };
   }
+}
+
+// ─── Public: logging wrappers ─────────────────────────────────────────
+// The *Impl bodies above own the actual logic and can return from a dozen
+// places. Wrapping here means every exit — success, ok:false, or throw —
+// passes through exactly one logging point, and no return path is touched.
+
+/** One record per call: which provider/model, ok flag, latency, error text. */
+function logChatResult(label, opts, providerId, t0, res, thrown) {
+  const ms = Date.now() - t0;
+  const base = {
+    label,
+    provider: providerId || (res && res.provider) || opts.providerId || null,
+    model: opts.model,
+    ms,
+    status_code: res && res.statusCode,
+    rate_limited: res && !!res.rate_limited,
+  };
+  if (thrown) {
+    zclog.fail("provider", label, { ...base, ok: false, error: thrown.message || String(thrown) });
+    return;
+  }
+  if (res && res.ok) {
+    zclog.info("provider", label, { ...base, ok: true });
+  } else {
+    zclog.fail("provider", label, {
+      ...base,
+      ok: false,
+      error: (res && res.error) || "unknown provider failure",
+      boundary: res && res.boundary,
+      stream_error: res && res.stream_error,
+    });
+  }
+}
+
+async function chat(opts) {
+  const providerId = opts.providerId || (opts.config && opts.config.id) || null;
+  const t0 = Date.now();
+  let res;
+  try {
+    res = await chatImpl(opts);
+  } catch (e) {
+    logChatResult("CHAT", opts, providerId, t0, null, e);
+    throw e;
+  }
+  logChatResult("CHAT", opts, providerId, t0, res, null);
+  return res;
+}
+
+async function chatStream(opts, onDelta) {
+  const providerId = opts.providerId || (opts.config && opts.config.id) || null;
+  const t0 = Date.now();
+  let res;
+  try {
+    res = await chatStreamImpl(opts, onDelta);
+  } catch (e) {
+    logChatResult("CHAT_STREAM", opts, providerId, t0, null, e);
+    throw e;
+  }
+  logChatResult("CHAT_STREAM", opts, providerId, t0, res, null);
+  return res;
 }
 
 module.exports = {

@@ -56,6 +56,10 @@ const PORT_ENV_BY_NAME = {
   ocr: "OCR_MCP_PORT",
   "screen-recorder": "SCREEN_MCP_PORT",
   tts: "TTS_MCP_PORT",
+  // Without this the name-derived default (UNIVERSAL_ADAPTER_MCP_PORT) would
+  // be set to a variable the adapter never reads, so a port override would
+  // silently do nothing.
+  "universal-adapter": "ADAPTER_HTTP_PORT",
 };
 
 /** name → child process (only entries WE spawned) */
@@ -85,10 +89,21 @@ function loadLocalServerEntries() {
       } catch (_) {
         /* url parse failure → port 0 → error below */
       }
+      // Probe path: servers bound to a sub-path (…/mcp) answer JSON-RPC only
+      // there; GET/POST / is a plain status page. Probing "/" made every
+      // sub-path gateway look dead in the smoke test.
+      let mcpPath = "/";
+      try {
+        const p = new URL(s.url).pathname.replace(/\/+$/, "");
+        if (p) mcpPath = p;
+      } catch (_) {
+        /* unparseable url → keep "/" */
+      }
       return {
         name: String(s.name),
         script: path.resolve(ROOT, s.script),
         port,
+        mcpPath,
         portEnv:
           PORT_ENV_BY_NAME[s.name] ||
           String(s.name).toUpperCase().replace(/-/g, "_") + "_MCP_PORT",
@@ -205,7 +220,7 @@ async function startLocalServers() {
       log(entry.name + " already-running on 127.0.0.1:" + entry.port);
       results.push({
         name: entry.name, status: "ready", port: entry.port,
-        detail: "already-running",
+        mcpPath: entry.mcpPath, detail: "already-running",
       });
       continue;
     }
@@ -216,7 +231,7 @@ async function startLocalServers() {
       const ready = await waitForPort(entry.port, Date.now() + READY_TIMEOUT_MS);
       results.push({
         name: entry.name, status: ready ? "ready" : "error", port: entry.port,
-        detail: ready ? "spawned" : "timeout",
+        mcpPath: entry.mcpPath, detail: ready ? "spawned" : "timeout",
       });
       continue;
     }
@@ -249,7 +264,8 @@ async function startLocalServers() {
     if (ready) {
       log(entry.name + " ready on 127.0.0.1:" + entry.port + " (pid " + child.pid + ")");
       results.push({
-        name: entry.name, status: "ready", port: entry.port, detail: "spawned",
+        name: entry.name, status: "ready", port: entry.port,
+        mcpPath: entry.mcpPath, detail: "spawned",
       });
     } else {
       const detail = earlyExit || "timeout";
@@ -335,7 +351,7 @@ async function standaloneSmoke() {
     // fetch handles the chunked transfer-encoding these servers use.
     let tools = null;
     try {
-      const res = await fetch("http://127.0.0.1:" + r.port + "/", {
+      const res = await fetch("http://127.0.0.1:" + r.port + (r.mcpPath || "/"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/list" }),

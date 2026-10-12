@@ -3,8 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mission Barisal — কো-পাইলট ইন্টারফেস</title>
-<style>
+  <title>Mission Barisal — কো-পাইলট ইন্টারফেস</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
 :root {
   --bg: #0d1117;
   --surface: #161b22;
@@ -350,7 +353,7 @@ select.setting-input { cursor: pointer; }
         <div class="settings-grid">
           <div class="setting-item">
             <label class="setting-label">Server URL</label>
-            <input type="text" class="setting-input" id="serverUrl" placeholder="http://127.0.0.1:3000">
+            <input type="text" class="setting-input" id="serverUrl" placeholder="https://zombiecoder.my.id">
           </div>
           <div class="setting-item">
             <label class="setting-label">UDS Socket Path</label>
@@ -401,7 +404,7 @@ select.setting-input { cursor: pointer; }
           </div>
           <div class="setting-item">
             <label class="setting-label">Max Tokens</label>
-            <input type="number" class="setting-input" id="maxTokens" value="4096" min="64" max="32768">
+            <input type="number" class="setting-input" id="maxTokens" value="90096" min="64" max="32768">
           </div>
         </div>
       </div>
@@ -414,15 +417,15 @@ select.setting-input { cursor: pointer; }
 </div>
 
 <script>
-// ══��════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════
 // Mission Barisal — Copilot Interface
-// Connects to the Mission Barisal Engine Server (port 3000)
+// Connects to the Mission Barisal Engine Server (port 9999)
 // UDS, HTTP/HTTPS, WebSocket transport support
 // ═══════════════════════════════════════════════════════════════
 
 const SERVER_OS = navigator.platform; // 'Win32', 'Linux x86_64', etc.
 const defaults = {
-  serverUrl: 'http://127.0.0.1:3000',
+  serverUrl: 'https://zombiecoder.my.id',
   udsPath: '/tmp/zombiecoder/mcp.sock',
   theme: 'dark',
   lang: 'bn',
@@ -466,7 +469,7 @@ async function connectServer() {
     setStatus('offline', 'Disconnected');
     console.warn('[Mission Barisal] Server connection failed:', e.message);
     // Retry after 5s
-    setTimeout(connectServer, 3000);
+    setTimeout(connectServer, 9999);
   }
 }
 
@@ -914,8 +917,8 @@ function loadSettings() {
     document.getElementById('apiKey').value = config.apiKey || '';
     document.getElementById('themeSelect').value = config.theme;
     document.getElementById('langSelect').value = config.lang || 'bn';
-    document.getElementById('streamToggle').checked = config.stream !== true;
-    document.getElementById('autoSaveToggle').checked = config.autoSave !== true;
+    document.getElementById('streamToggle').checked = config.stream !== false;
+    document.getElementById('autoSaveToggle').checked = config.autoSave !== false;
     document.getElementById('temperature').value = config.temperature;
     document.getElementById('tempDisplay').textContent = config.temperature;
     document.getElementById('maxTokens').value = config.maxTokens || 4096;
@@ -1033,7 +1036,7 @@ function showToast(msg, type) {
   const el = document.createElement('div');
   el.style.cssText = 'position:fixed;bottom:20px;right:20px;padding:10px 18px;border-radius:8px;background:' +
     (type === 'success' ? '#3fb950' : type === 'error' ? '#da3633' : '#58a6ff') +
-    ';color:#fff;z-index:3000;font-size:13px;box-shadow:0 4px 12px rgba(0,0,0,0.3);animation:fadeIn 0.3s ease;';
+    ';color:#fff;z-index:9999;font-size:13px;box-shadow:0 4px 12px rgba(0,0,0,0.3);animation:fadeIn 0.3s ease;';
   el.textContent = msg;
   document.body.appendChild(el);
   setTimeout(() => { el.style.opacity = '0'; el.style.transition = 'opacity 0.3s'; setTimeout(() => el.remove(), 300); }, 3000);

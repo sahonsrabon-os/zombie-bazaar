@@ -11,9 +11,12 @@ sahon.zip
 data/
 logs/
 cache/
+locks/
 .zombiecoder/
 .missionbarisal/
 node_modules/
+# symlinked node_modules (dir pattern misses symlinks — they are files to git)
+node_modules
 *.log
 *.db
 *.db-journal

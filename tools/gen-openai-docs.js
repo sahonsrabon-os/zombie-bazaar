@@ -38,7 +38,7 @@ function arg(name, fallback) {
   return i >= 0 && process.argv[i + 1] ? process.argv[i + 1] : fallback;
 }
 const CHECK = process.argv.includes("--check");
-const BASE = arg("--base", process.env.GATEWAY_BASE || "http://127.0.0.1:3000");
+const BASE = arg("--base", process.env.GATEWAY_BASE || "http://127.0.0.1:5050");
 
 // /api/admin/* is FAIL-CLOSED (ADMIN_TOKEN). This generator runs locally on
 // the same box, so it authenticates with the local .env token.

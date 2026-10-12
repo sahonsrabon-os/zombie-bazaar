@@ -5,6 +5,14 @@
 > Rule in force: *do not invent protocols; only join what already exists.*
 > Output rule: every finding has **two views** — `Human` (prose) and `Machine` (JSON).
 > Backup taken before any change: `/home/xubuntu/zvslast-BACKUP-<ts>/` (128 files, byte-exact).
+>
+> 📌 **Path note (2026-10-12):** the scope path above is the ORIGINAL audit
+> target on an older machine. The code now lives in this repo
+> (`/home/sahon/continue`); some paths named in the questions (e.g.
+> `Test/CDP/…`) belonged to that old tree and no longer exist here. The
+> `unnecessary/` quarantine folder mentioned in the verdicts has since been
+> removed as well (its manifest/history lives in these audit docs).
+> Questions remain valid — verify each against the current layout before answering.
 
 ---
 
@@ -109,6 +117,9 @@ reduce the surface, not to grow it.
 - Is `cdp-pipe.js` / `Test/CDP/cdp-driver.js` using the Chrome DevTools Protocol
   correctly (target attach, sessionId, command framing), and is CDP a **supported**
   path or an experiment?
+  - *(2026-10-12: `cdp-pipe.js` exists in this repo; `Test/CDP/cdp-driver.js`
+    was part of the old `/home/xubuntu/zvslast/` tree and is gone — only the
+    `cdp-pipe.js` half of this question is answerable here.)*
 
 ### A12. Persona quality vs industry skill
 

@@ -3,7 +3,7 @@
 ![Version](https://img.shields.io/badge/version-3.2.1-7c3aed)
 ![Platform](https://img.shields.io/badge/platform-Linux%20x86--64-2563eb)
 ![Node](https://img.shields.io/badge/Node-%E2%89%A5%2018-10b981)
-![MCP%20tools](https://img.shields.io/badge/MCP%20tools-36-f59e0b)
+![MCP%20tools](https://img.shields.io/badge/MCP%20tools-152-f59e0b)
 ![Agents](https://img.shields.io/badge/agents-10-ec4899)
 
 > **Where evidence meets conversation** — a zero-dependency Node.js server that speaks
@@ -12,8 +12,8 @@
 > own local socket. Every claim in this file carries a log line, a JSON excerpt or a
 > screenshot — and every known flaw stays listed.
 
-> 📘 **ওভারভিউ:** এই Extension + সার্ভার দুই অংশের মিলিত ভিত্তি-ডকুমেন্ট দেখো
-> [`docs/EXTENSION-OVERVIEW.md`](docs/EXTENSION-OVERVIEW.md) — সব কম্পোনেন্ট, MCP টুল, ক্লোন-রান ও প্রমাণ সহ।
+> 📘 **Overview:** combined foundation document for this Extension + server —
+> [`docs/EXTENSION-OVERVIEW.md`](docs/EXTENSION-OVERVIEW.md) — every component, MCP tool, clone-and-run step and evidence.
 
 The server is the **server half of the Mission Barisal platform**: agents, tool bus,
 anti-dote chain, DB-backed telemetry, and a provider ladder (local → cloud) that any
@@ -89,12 +89,12 @@ A virtual `mission` model runs the multi-agent debate path
 
 ---
 
-## MCP Tools (36)
+## MCP Tools (152)
 
 One registry, one enable/disable switch, four transports — `tools/list` and
 `tools/call` behave identically everywhere. The full table with descriptions lives in
 [`docs/openai-tools.md`](docs/openai-tools.md); the machine-readable OpenAI
-function-calling conversion of all 36 tools is [`docs/openai-schema.json`](docs/openai-schema.json).
+function-calling conversion of all 152 tools is [`docs/openai-schema.json`](docs/openai-schema.json).
 
 | Group | Tools |
 |-------|-------|
@@ -107,13 +107,13 @@ function-calling conversion of all 36 tools is [`docs/openai-schema.json`](docs/
 | Screen & OCR (external) | `screen-recorder__screen_record_start/status/stop/screenshot` · `ocr__ocr_crop/image/screenshot` |
 | Voice (external) | `tts__tts_play/speak/voices` |
 
-Live registry: **36 tools, all enabled**. Call/error counters are runtime stats; the docs-vs-registry claim is re-verified on every run by `tests/docs-claims.test.js`.
+Live registry: **152 tools, all enabled**. Call/error counters are runtime stats; the docs-vs-registry claim is re-verified on every run by `tests/docs-claims.test.js`.
 Disabling a tool drops it from `tools/list` and refuses `tools/call` at one choke
 point; re-enabling restores it.
 
 <img src="docs/evidence/mcp-tools-stats.jpeg" width="620" alt="MCP & Tools stats — 35 total tools, 0 errors">
 <img src="docs/evidence/mcp-tools-list-b.jpeg" width="620" alt="Per-tool Enable/Disable toggles - MCP & Tools admin page">
-> Captures are point-in-time (35 tools when captured; the live count is 36 and is
+> Captures are point-in-time (35 tools when captured; the live count is 152 and is
 > re-verified by `tests/docs-claims.test.js`).
 
 ---
@@ -122,7 +122,7 @@ point; re-enabling restores it.
 
 | Transport | Endpoint | Wire format |
 |-----------|----------|-------------|
-| HTTP JSON-RPC 2.0 | `POST /mcp` | newline/JSON-RPC (VS Code uses `http://localhost:3000/mcp`) |
+| HTTP JSON-RPC 2.0 | `POST /mcp` | newline/JSON-RPC (VS Code uses `http://localhost:5050/mcp`) |
 | SSE | `GET /mcp` | `endpoint` event + tool events |
 | WebSocket | HTTP upgrade on `/` | full-duplex messages |
 | Unix domain socket | `/tmp/zombiecoder/mcp.sock` | newline-delimited JSON-RPC (TCP fallback on Windows) |
@@ -437,7 +437,9 @@ have to repeat.
 - **Real daily-tools execution** (non-stream, server-side): 5 × `MCP_CALL` —
   `write_file` → `read_file` → `list_directory` → `exec (uname -s)` → retry-list;
   `data/daily-check.txt` really contains `content barisal-ok` on disk; full loop
-  221 s under desktop load. The first attempt had returned HTTP 502 at the 300 s
+  221 s under desktop load. *(Historical test artifact — that one-off file was
+  produced by the run above and is not kept in the repo; the harness is
+  `tests/` + `start-local-mcp.js`.)* The first attempt had returned HTTP 502 at the 300 s
   per-call limit because machine load cut prompt prefill to 32.8 tok/s and the
   1 B peg-format retry doubled the call — `OLLAMA_TIMEOUT_MS` raised
   300000 → 600000 in `.env` (documented inline).
@@ -595,13 +597,14 @@ monu_the_builder/
 ├── public/                # admin.html (runtime admin panel)
 ├── data/                  # SQLite DBs (git-ignored) + config
 ├── docs/                  # openai-schema.json · evidence screenshots · guides
-├── doc/                   # long-form documentation
+├── lib/                   # zc-log.js — unified structured log (logs/zc.jsonl)
 ├── agent/ · cache/ · logs/
-├── tests/ · Test/          # live test suites + archived test material
+├── tests/                 # live test suites  (old `Test/` folder was quarantined & removed)
+├── scripts/               # healthcheck.js · install-service.sh · zombiecoder-gateway.sh (systemd)
 ├── external tools/ · external mcp/  # php-broker, OCR/screen/TTS servers
 ├── tools/                  # gen-openai-docs.js (docs from the live registry), tool-sanitizer.js (marker → tool_calls)
-├── registry.seed.json     # model/provider seed (text)
-├── registry.db            # same seed as binary snapshot (fresh-install path)
+├── registry.seed.json     # ⚠️ no local copy — on empty DB api.js downloads it from GitHub
+├── registry.db            # binary snapshot of the seed — generated locally (git-ignored)
 ├── start-local-mcp.js      # standalone MCP starter
 └── domain-config.js        # env-driven domain/identity config
 ```

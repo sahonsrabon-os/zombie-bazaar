@@ -42,7 +42,7 @@ curl http://127.0.0.1:3000/health
 
 | ভেরিয়েবল | মান | নোট |
 |---|---|---|
-| `PORT` | `3000` | HTTP পোর্ট |
+| `PORT` | `3000` (ডিফল্ট) / `5050` (বর্তমান ইনস্ট্যান্স) | HTTP পোর্ট — বর্তমানে টেস্ট ইনস্ট্যান্স 5050-এ চলছে (`.env`-এ `PORT=5050`) |
 | `DOMAIN` | `localhost` / ভেতরের IP / ডোমেইন | bind-host নির্ধারণ |
 | `OLLAMA_BASE` | `http://127.0.0.1:11434/v1` | লোকাল ollama |
 | `GEMINI_API_KEY` | `<key>` | ক্লাউড |
@@ -55,25 +55,31 @@ curl http://127.0.0.1:3000/health
 
 ## systemd (অটো-স্টার্ট)
 
-```ini
-[Unit]
-Description=ZombieCoder Gateway
-After=network.target
-
-[Service]
-WorkingDirectory=/opt/zombiecoder-server
-ExecStart=/usr/bin/node start.js --start-all -s
-Restart=always
-RestartSec=5
-Environment=PORT=3000
-
-[Install]
-WantedBy=multi-user.target
-```
+> ⚠️ **সংস্করণ-নোট (২০২৬-১০-১২):** পুরনো নির্দেশনায় `zombiecoder.service` নামে একটা
+> সিস্টেম-লেভেল ইউনিট ছিল (পথ `/opt/zombiecoder-server`, পোর্ট 3000) — **সেটা এখন
+> বাস্তবে নেই** (ইউনিট ফাইল কোথাও নেই, পথ-পোর্টও স্টেল)। বর্তমান সেটআপ **ইউজার
+> ইউনিট** `zombiecoder-gateway.service`, যেটা রিপোর স্ক্রিপ্ট থেকে অটো-জেনারেট হয় —
+> তাই হাতে ইউনিট ফাইল লিখতে হয় না, নতুন মেশিনেও এক কমান্ডেই তৈরি:
 
 ```bash
-sudo cp zombiecoder.service /etc/systemd/system/
-sudo systemctl enable --now zombiecoder
+# ইউনিট জেনারেট + এনাবেল (পাথ স্ক্রিপ্ট নিজে বের করে — হার্ডকোড নেই)
+./scripts/install-service.sh            # শুধু লেখা + enable
+./scripts/install-service.sh --start    # …আর এখনই চালু
+# পরিষ্কার করতে:  ./scripts/install-service.sh --remove
+```
+
+স্ক্রিপ্টটি যা করে (সবটাই রিপোর-লোকেশন-ডিরাইভেড):
+- `WorkingDirectory` / `ExecStart` = রিপোর রুট (স্ক্রিপ্টের অবস্থান থেকে বের করা)
+- `Restart=always` (ক্র্যাশ = ২ সেকেন্ডে অটো-রিস্টার্ট) + লগ `logs/systemd-{out,err}.log`
+- `loginctl enable-linger` — লগআউট/রিবুটের পরেও চালু থাকে (লগইন ছাড়াই বুটে স্টার্ট)
+- সব পাথ (`$HOME`-ভিত্তিক) — অর্থাৎ নতুন OS ইনস্টলে ফাইল এডিট করতে হয় না
+
+সার্ভার চালু থাকলে যাচাই:
+
+```bash
+node scripts/healthcheck.js        # সব কম্পোনেন্টের PASS/FAIL টেবিল
+node scripts/healthcheck.js --fix  # যা নেই সেটা নিজে মেরামত + রি-চেক
+systemctl --user status zombiecoder-gateway.service
 ```
 
 ## নোট
@@ -81,7 +87,9 @@ sudo systemctl enable --now zombiecoder
 - **Windows-নির্ভর MCP** (`external mcp/screen-recorder-mcp.js`, `tts-mcp.js`,
   `ocr-mcp.js`) Linux-এ চলবে না — `start-all` সেগুলো সহজে **skip/warn** করে
   (fail-hard নয়); কোর সার্ভার, broker, UDS, tools সব ঠিক চলবে।
-- লগ: `logs/YYYY-MM-DD.log` · কনফিগ DB: `data/models.db` (node:sqlite, zero-dep)
+- লগ: ইউনিফায়েড `logs/zc.jsonl` (api + provider + adapter + transport, সফল/ব্যর্থ
+  প্রতি ইভেন্ট) · পুরনো ডেটেড `logs/YYYY-MM-DD.log` · সিস্টেমড `logs/systemd-*.log`
+  · কনফিগ DB: `data/models.db` (node:sqlite, zero-dep)
 - রিস্টার্ট-পর্যায়ে দেখা স্বীকৃতি:
   ```
   Mission Barisal v3.2.1 — START ALL

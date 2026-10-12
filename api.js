@@ -143,6 +143,9 @@ const MCP_TABLE = (function () {
 // normalization — lives in ./provider and ./normalizer. api.js only routes.
 const providerRegistry = require("./provider");
 const toolRegister = require("./provider/tools");
+// Unified structured log (logs/zc.jsonl). Path resolves from THIS file's
+// location — works no matter where the project is checked out.
+const zclog = require("./lib/zc-log");
 
 // ─── Domain Configuration (per-server identity) ──────────────
 const {
@@ -850,7 +853,16 @@ const PROVIDER_CONFIG = {
   opencode: {
     name: "OpenCode",
     baseUrl: process.env.OPENCODE_BASE || "https://opencode.ai/zen/v1",
-    key: process.env.OPENCODE_API_KEY || "",
+    // A placeholder value ("<YOUR_..._KEY>") is not a credential. Treating it
+    // as one sent a literal placeholder upstream and produced confusing 401s
+    // instead of the provider simply being unavailable. An empty/placeholder
+    // key now disables this provider; every other provider keeps working.
+    key:
+      /^(<.*>|\{\{.*\}\}|YOUR_|CHANGEME|xxx+)$/i.test(
+        (process.env.OPENCODE_API_KEY || "").trim()
+      )
+        ? ""
+        : process.env.OPENCODE_API_KEY || "",
     priority: parseInt(process.env.OPENCODE_PRIORITY || "999", 10), // NaN-proof: unset → lowest
     type: process.env.OPENCODE_TYPE || "openai",
     models: parseModelsEnv(process.env.OPENCODE_MODELS || ""),
@@ -1606,6 +1618,10 @@ function getDisabledModelRows() {
 // the only place a public name may live.
 const applyModelAlias = makeAliasResolver(process.env.MODEL_ALIASES || "");
 
+// Opt-in passthrough for unknown models. Default OFF so a typo or a stale
+// agent->model row fails loudly instead of being answered by another model.
+const ALLOW_WILDCARD_MODEL = process.env.ALLOW_WILDCARD_MODEL || "0";
+
 function resolveProvider(model, exactOnly) {
   // 🧟 GUARD: Reject template/placeholder model names (e.g. "{{model}}")
   // These come from misconfigured clients and cause massive PROXY_FAIL storms
@@ -1646,20 +1662,51 @@ function resolveProvider(model, exactOnly) {
     return { ...allNames.get(model), matchType: "exact" };
   }
   if (exactOnly) return null;
-  // 2. Wildcard — empty models[] accepts any model
-  for (const [id, p] of Object.entries(PROVIDER_CONFIG)) {
-    if (p.enabled === false) continue; // 🧟 admin-disabled provider
-    if (p.models.length === 0) {
-      return { providerId: id, config: p, matchType: "wildcard" };
+
+  // 2. Agent ids resolve to their DB-backed model before anything else.
+  //    Without this an agent whose model row is stale (e.g. "llama-local",
+  //    an id no provider actually serves) silently fell through to the
+  //    wildcard below and got answered by a DIFFERENT model while still
+  //    reporting the agent id.
+  try {
+    if (MODELS_DB) {
+      const row = MODELS_DB
+        .prepare("SELECT model FROM agents WHERE id = ? AND enabled = 1")
+        .get(model);
+      if (row && row.model && row.model !== model) {
+        const resolved = applyModelAlias(row.model);
+        if (allNames.has(resolved)) {
+          return { ...allNames.get(resolved), matchType: "agent_db", requestedModel: model };
+        }
+      }
+    }
+  } catch (_) {
+    /* DB unavailable — fall through */
+  }
+
+  // 3. Wildcard — a provider with an empty models[] list.
+  //    This is a legitimate OpenAI-compatible passthrough, BUT it must not
+  //    swallow a typo: without the guard below, "zzz-does-not-exist" was
+  //    accepted and forwarded upstream, which is indistinguishable from a
+  //    working model until the upstream fails. Wildcards are therefore only
+  //    honoured when the caller explicitly opted in.
+  if (ALLOW_WILDCARD_MODEL === "1") {
+    for (const [id, p] of Object.entries(PROVIDER_CONFIG)) {
+      if (p.enabled === false) continue; // 🧟 admin-disabled provider
+      if (p.models.length === 0) {
+        return { providerId: id, config: p, matchType: "wildcard" };
+      }
     }
   }
-  // 3. Fallback — first provider
-  const firstId = firstEnabledProviderId();
-  return {
-    providerId: firstId,
-    config: PROVIDER_CONFIG[firstId],
-    matchType: "fallback",
-  };
+
+  // 4. No provider serves this model. Returning null makes the caller emit a
+  //    truthful "unknown model" error instead of answering from the wrong one.
+  log("WARN", "MODEL_NOT_FOUND", {
+    model,
+    known: allNames.size,
+    wildcardDisabled: ALLOW_WILDCARD_MODEL !== "1",
+  });
+  return null;
 }
 
 // ─── Resolve all matching providers in priority order (for fallback) ──
@@ -1693,8 +1740,18 @@ function findNextProvider(model, currentProviderId) {
   // Start from the next provider after currentIdx, skipping unhealthy ones
   for (let i = currentIdx + 1; i < allProviders.length; i++) {
     const candidate = allProviders[i];
+    // A provider can only serve the model it actually advertises. Without
+    // this check the fallback happily handed an unknown model id (a typo, or
+    // a stale agent→model row) to the next provider, which then either 400'd
+    // or — worse — answered from a different model than the caller asked
+    // for. resolveProvider(x, true) is the exact-match oracle: null means
+    // "this provider does not serve that model".
+    const servesIt = resolveProvider(model, true);
+    const servesHere = servesIt && servesIt.providerId === candidate.providerId;
+
     if (
       PROVIDER_CONFIG[candidate.providerId]?.enabled !== false && // 🧟 admin-off
+      servesHere &&
       isProviderHealthy(candidate.providerId, model)
     ) {
       return candidate;
@@ -1702,7 +1759,9 @@ function findNextProvider(model, currentProviderId) {
     log("INFO", "PROVIDER_SKIP_UNHEALTHY", {
       providerId: candidate.providerId,
       model,
-      reason: "Provider is marked unhealthy or rate-limited",
+      reason: servesHere
+        ? "Provider is marked unhealthy or rate-limited"
+        : "Provider does not advertise this model",
     });
   }
   return null;
@@ -2877,6 +2936,11 @@ function log(level, category, data, consoleOnly) {
   try {
     fs.appendFileSync(logFile, entry + "\n");
   } catch (e) { }
+  // Mirror into the unified structured log so one file (logs/zc.jsonl) holds
+  // api + provider + adapter + transport events side by side.
+  zclog.raw(level === "ERROR" ? "ERROR" : level === "WARN" ? "WARN" : level === "DEBUG" ? "DEBUG" : "INFO",
+    "api", category,
+    typeof data === "string" ? { msg: data } : data);
 }
 
 /**
@@ -3066,10 +3130,13 @@ function parseYamlAgentFile(content) {
   const id = fields.name || "";
   if (!id) return null;
 
-  // Model safety: slash-prefixed models (enterprise/xxx) are not in
-  // any configured provider catalog — fall back to a known free model.
-  const model = fields.model || "nemotron-3-ultra-free";
-  const safeModel = model.includes("/") ? "nemotron-3-ultra-free" : model;
+  // Model safety: a slash-prefixed model (e.g. "mistral/leanstral-1-5") IS a
+  // legitimate catalog entry in this deployment — the agents table already
+  // uses one. Previously ANY slash silently rewrote the model to a hardcoded
+  // "nemotron-3-ultra-free", which pinned those agents to the wrong provider.
+  // Keep the declared model; only fall back when nothing was declared.
+  const model = fields.model || defaultAgentModel();
+  const safeModel = model;
 
   const modelNames =
     /nemotron-3-ultra-free|mimo-v2\.5-free|big-pickle|nemotron-3-ultra-free|north-mini-code-free|hy3-free/gi;
@@ -3096,6 +3163,30 @@ function parseYamlAgentFile(content) {
 // Sources (merged, custom overrides default):
 //   1. PERSONAS.md              — "## agent:" markdown format (default agents)
 //   2. .zombiecoder/agents/*.md — YAML frontmatter format (custom agents)
+// Resolve the fallback model from the models database instead of baking a
+// literal name into the source. Returns the sentinel "MODELS_DB" when no
+// catalog is available, so callers resolve it through the provider ladder.
+function defaultAgentModel() {
+  try {
+    if (MODELS_DB) {
+      // NOTE 1: the models table has no `model` column — the provider-facing
+      //         name lives in `api_model` (`name` is the display label).
+      // NOTE 2: SQLite does NOT accept parenthesised ORDER BY terms
+      //         ("ORDER BY (a ASC, b ASC)" is MySQL syntax) — it throws
+      //         "near ASC: syntax error". Keep the list flat.
+      const row = MODELS_DB
+        .prepare(
+          "SELECT api_model FROM models WHERE enabled = 1 ORDER BY priority ASC, id ASC LIMIT 1"
+        )
+        .get();
+      if (row && row.api_model) return row.api_model;
+    }
+  } catch (_) {
+    /* fall through to the sentinel */
+  }
+  return "MODELS_DB";
+}
+
 async function loadPersonas() {
   const merged = [];
   const seen = new Set();
@@ -3113,7 +3204,12 @@ async function loadPersonas() {
         merged.push({
           id: r.id,
           name: r.name || r.id,
-          model: r.model || "nemotron-3-ultra-free",
+          // No hardcoded model fallback. "MODELS_DB" is the project's
+          // sentinel meaning "resolve this later from the models table /
+          // provider registry" — the same sentinel agent/*.js files use.
+          // A literal model name here would silently pin an agent to one
+          // provider and defeat runtime model selection.
+          model: r.model || "MODELS_DB",
           role: r.role || "general",
           expertise: r.expertise || "",
           priority: r.priority || 99,
@@ -3137,6 +3233,26 @@ async function loadPersonas() {
       if (a && a.id && !seen.has(a.id)) {
         seen.add(a.id);
         merged.push(a);
+        continue;
+      }
+      // The DB row was pushed first, so `seen` already contains this id and
+      // the file persona used to be discarded. If the DB persona is missing
+      // or trivially short (an admin-saved stub, not the real text), upgrade
+      // the already-pushed entry with the authoritative file persona rather
+      // than running the agent on a 30-character prompt.
+      if (a && a.id && seen.has(a.id) && a.persona) {
+        const existing = merged.find((m) => m.id === a.id);
+        const dbLen = (existing?.persona || "").trim().length;
+        const fileLen = a.persona.trim().length;
+        if (existing && fileLen > dbLen && fileLen > 200) {
+          existing.persona = a.persona;
+          existing.persona_source = "agent/*.js";
+          log("INFO", "PERSONA_BACKFILL_FROM_FILE", {
+            id: a.id,
+            from_chars: dbLen,
+            to_chars: fileLen,
+          });
+        }
       }
     }
     if (fileAgents.length > 0) {
@@ -5574,7 +5690,28 @@ function callModelStream(
       providerId = providerOverride.providerId || providerOverride.id;
       config = providerOverride.config;
     } else {
-      ({ providerId, config } = resolveProvider(model));
+      const resolved = resolveProvider(model);
+      if (!resolved) {
+        log("WARN", "STREAM_NO_PROVIDER", { model });
+        resolve({
+          ok: false,
+          error: `Unknown model "${model}" — no configured provider serves it.`,
+          errorCode: "model_not_found",
+          model,
+        });
+        return;
+      }
+      ({ providerId, config } = resolved);
+    }
+    if (!config || !config.baseUrl) {
+      log("WARN", "STREAM_NO_BASEURL", { model, providerId });
+      resolve({
+        ok: false,
+        error: `Provider "${providerId}" is not configured (no base URL / API key).`,
+        errorCode: "provider_not_configured",
+        model,
+      });
+      return;
     }
     // ─── Capability gate — DB-driven (NO hardcoded model names) ──
     const resolvedApiModel = resolveApiModel(model, providerId);
@@ -5792,7 +5929,38 @@ function callModel(
       providerId = providerOverride.providerId || providerOverride.id;
       config = providerOverride.config;
     } else {
-      ({ providerId, config } = resolveProvider(model));
+      const resolved = resolveProvider(model);
+      if (!resolved) {
+        // No configured provider serves this model. Say so instead of
+        // silently answering from an unrelated one.
+        log("WARN", "CALL_MODEL_NO_PROVIDER", { model });
+        resolve({
+          success: false,
+          content: "",
+          error:
+            `Unknown model "${model}". No configured provider serves it. ` +
+            `Check the model name, the provider's model list, or the agent's ` +
+            `model mapping in Admin -> Agent Manager.`,
+          errorCode: "model_not_found",
+          model,
+        });
+        return;
+      }
+      ({ providerId, config } = resolved);
+    }
+    if (!config || !config.baseUrl) {
+      log("WARN", "CALL_MODEL_NO_BASEURL", { model, providerId });
+      resolve({
+        success: false,
+        content: "",
+        error:
+          `Provider "${providerId}" has no base URL configured — it may be ` +
+          `disabled or missing an API key.`,
+        errorCode: "provider_not_configured",
+        model,
+        provider: providerId,
+      });
+      return;
     }
     const baseUrl = config.baseUrl;
     const apiKey = config.key;
@@ -11822,6 +11990,13 @@ function trackProviderUsage(providerId, isError = false, isRateLimit = false) {
 }
 
 function trackToolUsage(toolName, isError = false) {
+  // 🧟 ANTI-DRIFT GUARD (docs-claims C4): only REAL served tools may enter
+  // the stats store. Without this, a probe of any bogus name
+  // (e.g. `no_such_tool_xyz`) upserted a tool_stats row, the admin registry
+  // (union of MCP_TOOLS + tool_stats + memory) grew past tools/list, and
+  // docs-claims C4/C5 failed forever. Unknown-name calls still hit the
+  // REQUEST/MCP_TOOLS_CALL logs — they just don't pollute the registry.
+  if (!Object.prototype.hasOwnProperty.call(MCP_TOOLS, toolName)) return;
   if (!STATS.toolUsage[toolName])
     STATS.toolUsage[toolName] = { count: 0, lastUsed: null, errors: 0 };
   STATS.toolUsage[toolName].count++;
@@ -12710,6 +12885,20 @@ const server = http.createServer(async (req, res) => {
     }
 
     // ─── GET /api/mcp-clients ─────────────────────────────────
+    // Tool-surface manifest: separates the documented 36 (core + the MCP
+    // servers the project ships) from operator-added pluggable servers, so
+    // a big number no longer looks like stale docs.
+    if (url === "/api/tools/manifest" && method === "GET") {
+      const { manifest } = require("./tools/tools-manifest.js");
+      const names = Object.keys(MCP_TOOLS);
+      const payload = manifest(names);
+      log("INFO", "REQUEST", {
+        method, url, status: 200, elapsed: Date.now() - startTime,
+        tools: names.length, documented: payload.documented_contract,
+      });
+      return jsonResponse(res, 200, payload);
+    }
+
     if (url === "/api/mcp-clients" && method === "GET") {
       const mcpStatus = {
         domain: requestDomain,
@@ -14330,14 +14519,34 @@ window.__ADMIN_CONFIG = ${JSON.stringify({
           ([, a], [, b]) => a.priority - b.priority,
         );
         const providerResolved = resolveProvider(model);
-        const orderedProviders = providerResolved
-          ? [
+        let orderedProviders;
+        if (providerResolved) {
+          orderedProviders = [
             [providerResolved.providerId, providerResolved.config],
-            ...allProviders.filter(
-              ([id]) => id !== providerResolved.providerId,
-            ),
-          ]
-          : allProviders;
+            ...allProviders.filter(([id]) => id !== providerResolved.providerId),
+          ];
+        } else {
+          // No provider serves this model. Falling back to "try everybody"
+          // was the bug that let a typo'd model id be answered by an
+          // unrelated provider — every candidate would receive a model it
+          // does not advertise. Refuse instead.
+          const known = [...new Set(
+            Object.values(PROVIDER_CONFIG)
+              .filter((p) => p.enabled !== false)
+              .flatMap((p) => p.models.map((m) => getModelName(m)))
+          )].filter((m) => m !== "*");
+          const hint = known.slice(0, 8).join(", ");
+          log("WARN", "PROXY_MODEL_UNKNOWN", { model, knownSample: hint });
+          jsonResponse(res, 400, {
+            error: {
+              message:
+                `Unknown model "${model}". No configured provider serves it.` +
+                (hint ? ` Available examples: ${hint}` : ""),
+              type: "invalid_request_error",
+              code: "model_not_found",
+            },
+          });
+        }
 
         log("INFO", "PROXY_ROUTE", {
           model,
@@ -15994,7 +16203,11 @@ window.__ADMIN_CONFIG = ${JSON.stringify({
       status: 500,
       elapsed: Date.now() - startTime,
     });
-    jsonResponse(res, 500, { error: err.message });
+    // A handler may have already replied (e.g. the unknown-model 400) and
+    // then thrown on the way out. Writing headers again crashes the whole
+    // process with ERR_HTTP_HEADERS_SENT, so guard it.
+    if (!res.headersSent) jsonResponse(res, 500, { error: err.message });
+    else try { res.end(); } catch (_) {}
   }
 });
 
@@ -18092,4 +18305,41 @@ process.on("SIGTERM", shutdown);
 // Flush buffered client-info writes on any other exit path too
 process.on("exit", () => {
   try { flushClientsSync(); } catch (_) { }
+});
+
+// ─── Crash containment ────────────────────────────────────────────────
+// Both handlers write a structured record to logs/zc.jsonl FIRST, so a
+// restart loop never happens without a reason on disk.
+//
+// unhandledRejection → log and CONTINUE. A single rejected promise must not
+//   take down a gateway that is serving other requests (this is the
+//   "troubleshoot and keep running" path).
+//
+// uncaughtException → log and EXIT(1) (override with ZC_EXIT_ON_CRASH=0).
+//   After an uncaught exception the heap is in an unknown state; exiting is
+//   what Node itself would do, and it is the self-heal: the supervisor
+//   (systemd Restart=always / start.js) starts a clean process. With the
+//   env override set the old "soldier on" behaviour is available instead.
+process.on("unhandledRejection", (reason) => {
+  try {
+    zclog.fail("api", "UNHANDLED_REJECTION", {
+      error: reason instanceof Error ? reason.message : String(reason),
+      continued: true,
+    });
+  } catch (_) { /* logger must never crash the handler */ }
+});
+process.on("uncaughtException", (err) => {
+  try {
+    zclog.fail("api", "UNCAUGHT_EXCEPTION", {
+      error: (err && err.message) || String(err),
+      code: err && err.code,
+      stack: String((err && err.stack) || "").split("\n").slice(0, 6).join(" | "),
+      action: (process.env.ZC_EXIT_ON_CRASH || "1") !== "0"
+        ? "exit(1) → supervisor restarts a clean process"
+        : "continuing (ZC_EXIT_ON_CRASH=0)",
+    });
+  } catch (_) { }
+  if ((process.env.ZC_EXIT_ON_CRASH || "1") !== "0") {
+    setTimeout(() => process.exit(1), 200);
+  }
 });

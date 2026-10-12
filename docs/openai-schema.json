@@ -863,41 +863,3129 @@
           ]
         }
       }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "public-api__stackoverflow_search",
+        "description": "[external:public-api] Search Stack Overflow questions by keyword. Returns titles, scores, views, answers, tags, links.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "description": "Search query"
+            },
+            "sort": {
+              "type": "string",
+              "enum": [
+                "relevance",
+                "votes",
+                "creation",
+                "activity"
+              ],
+              "default": "relevance"
+            },
+            "size": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10
+            }
+          },
+          "required": [
+            "query"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "public-api__stackoverflow_get_question",
+        "description": "[external:public-api] Get a full Stack Overflow question with body, answers, tags, score.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "question_id": {
+              "type": "integer",
+              "description": "Question ID (e.g. 11227809)"
+            }
+          },
+          "required": [
+            "question_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "public-api__stackoverflow_get_answers",
+        "description": "[external:public-api] Get all answers for a Stack Overflow question, sorted by votes.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "question_id": {
+              "type": "integer",
+              "description": "Question ID"
+            },
+            "size": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10
+            }
+          },
+          "required": [
+            "question_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "public-api__stackoverflow_search_by_tag",
+        "description": "[external:public-api] Search questions filtered by tag(s).",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "tag": {
+              "type": "string",
+              "description": "Single tag (e.g. 'javascript')"
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Multiple tags"
+            },
+            "sort": {
+              "type": "string",
+              "enum": [
+                "votes",
+                "creation",
+                "activity",
+                "unanswered"
+              ],
+              "default": "votes"
+            },
+            "size": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10
+            }
+          },
+          "required": []
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "public-api__stackoverflow_get_tag_info",
+        "description": "[external:public-api] Get info about a Stack Overflow tag (count, synonyms, wiki).",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "tag_name": {
+              "type": "string",
+              "description": "Tag name"
+            }
+          },
+          "required": [
+            "tag_name"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "public-api__stackoverflow_get_trending",
+        "description": "[external:public-api] Get trending/popular questions on Stack Overflow.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "size": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50,
+              "default": 10
+            }
+          },
+          "required": []
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "public-api__weather_current",
+        "description": "[external:public-api] Get current weather for a location (temp, humidity, wind, conditions).",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "latitude": {
+              "type": "number"
+            },
+            "longitude": {
+              "type": "number"
+            },
+            "city": {
+              "type": "string",
+              "description": "City name (auto-geocoded)"
+            }
+          },
+          "required": []
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "public-api__weather_forecast",
+        "description": "[external:public-api] Get weather forecast up to 16 days (daily or hourly).",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "latitude": {
+              "type": "number"
+            },
+            "longitude": {
+              "type": "number"
+            },
+            "city": {
+              "type": "string"
+            },
+            "days": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 16,
+              "default": 7
+            }
+          },
+          "required": []
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "public-api__weather_alerts",
+        "description": "[external:public-api] Get severe weather alerts for a location.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "latitude": {
+              "type": "number"
+            },
+            "longitude": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "latitude",
+            "longitude"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "public-api__weather_historical",
+        "description": "[external:public-api] Get historical weather data for a date range (past data).",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "latitude": {
+              "type": "number"
+            },
+            "longitude": {
+              "type": "number"
+            },
+            "start_date": {
+              "type": "string",
+              "description": "YYYY-MM-DD"
+            },
+            "end_date": {
+              "type": "string",
+              "description": "YYYY-MM-DD"
+            }
+          },
+          "required": [
+            "latitude",
+            "longitude",
+            "start_date",
+            "end_date"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "public-api__weather_geocode",
+        "description": "[external:public-api] Convert city name to coordinates.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "city": {
+              "type": "string"
+            },
+            "count": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 10,
+              "default": 1
+            }
+          },
+          "required": [
+            "city"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "public-api__wikipedia_search",
+        "description": "[external:public-api] Search Wikipedia articles by keyword.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string"
+            },
+            "language": {
+              "type": "string",
+              "default": "en"
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50,
+              "default": 10
+            }
+          },
+          "required": [
+            "query"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "public-api__wikipedia_get_summary",
+        "description": "[external:public-api] Get a quick summary of a Wikipedia article.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "language": {
+              "type": "string",
+              "default": "en"
+            }
+          },
+          "required": [
+            "title"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "public-api__wikipedia_get_article",
+        "description": "[external:public-api] Get full content of a Wikipedia article as plain text.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "language": {
+              "type": "string",
+              "default": "en"
+            }
+          },
+          "required": [
+            "title"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "public-api__wikipedia_get_sections",
+        "description": "[external:public-api] Get section structure of a Wikipedia article.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "language": {
+              "type": "string",
+              "default": "en"
+            }
+          },
+          "required": [
+            "title"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "public-api__wikipedia_get_links",
+        "description": "[external:public-api] Get internal links from a Wikipedia article.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "language": {
+              "type": "string",
+              "default": "en"
+            },
+            "limit": {
+              "type": "integer",
+              "default": 50
+            }
+          },
+          "required": [
+            "title"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "public-api__wikipedia_get_random",
+        "description": "[external:public-api] Get a random Wikipedia article.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "language": {
+              "type": "string",
+              "default": "en"
+            }
+          },
+          "required": []
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "public-api__wikipedia_get_categories",
+        "description": "[external:public-api] Get categories of a Wikipedia article.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "language": {
+              "type": "string",
+              "default": "en"
+            }
+          },
+          "required": [
+            "title"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "public-api__country_search",
+        "description": "[external:public-api] Search countries by name. Returns flag, capital, currency, population, languages, timezones.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "Country name (e.g. 'Bangladesh')"
+            }
+          },
+          "required": [
+            "name"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "public-api__country_get_by_code",
+        "description": "[external:public-api] Get country info by 2-letter code (e.g. BD, US, GB).",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "code": {
+              "type": "string",
+              "description": "ISO 3166-1 alpha-2 code"
+            }
+          },
+          "required": [
+            "code"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "public-api__country_list_all",
+        "description": "[external:public-api] List all countries with basic info (name, code, capital, region).",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "region": {
+              "type": "string",
+              "description": "Filter by region: Africa, Americas, Asia, Europe, Oceania"
+            },
+            "limit": {
+              "type": "integer",
+              "default": 50
+            }
+          },
+          "required": []
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "public-api__currency_convert",
+        "description": "[external:public-api] Convert amount from one currency to another using ECB rates.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "from": {
+              "type": "string",
+              "description": "Source currency (e.g. USD)"
+            },
+            "to": {
+              "type": "string",
+              "description": "Target currency (e.g. BDT)"
+            },
+            "amount": {
+              "type": "number",
+              "default": 1
+            }
+          },
+          "required": [
+            "from",
+            "to"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "public-api__currency_rates",
+        "description": "[external:public-api] Get exchange rates for a base currency.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "base": {
+              "type": "string",
+              "default": "USD",
+              "description": "Base currency"
+            },
+            "symbols": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Target currencies (e.g. ['EUR','GBP'])"
+            }
+          },
+          "required": []
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "public-api__currency_list",
+        "description": "[external:public-api] List all supported currencies.",
+        "parameters": {
+          "type": "object",
+          "properties": {},
+          "required": []
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "public-api__crypto_price",
+        "description": "[external:public-api] Get live price of cryptocurrencies (BTC, ETH, etc.) in multiple currencies.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "coins": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Coin IDs (e.g. ['bitcoin','ethereum'])"
+            },
+            "currencies": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "default": [
+                "usd"
+              ],
+              "description": "Fiat currencies"
+            }
+          },
+          "required": [
+            "coins"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "public-api__crypto_search",
+        "description": "[external:public-api] Search for a cryptocurrency by name or symbol.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "description": "Search query"
+            }
+          },
+          "required": [
+            "query"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "public-api__crypto_market",
+        "description": "[external:public-api] Get top cryptocurrencies by market cap.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10
+            },
+            "currency": {
+              "type": "string",
+              "default": "usd"
+            }
+          },
+          "required": []
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "public-api__ip_lookup",
+        "description": "[external:public-api] Get geolocation info from IP address (country, city, ISP, coordinates).",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "ip": {
+              "type": "string",
+              "description": "IP address (empty = your IP)"
+            }
+          },
+          "required": []
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "public-api__qr_generate",
+        "description": "[external:public-api] Generate a QR code image URL from text or URL.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "text": {
+              "type": "string",
+              "description": "Text or URL to encode"
+            },
+            "size": {
+              "type": "integer",
+              "default": 300,
+              "description": "Image size in pixels"
+            },
+            "format": {
+              "type": "string",
+              "enum": [
+                "png",
+                "svg",
+                "gif"
+              ],
+              "default": "png"
+            }
+          },
+          "required": [
+            "text"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "combined__ads_create_campaign",
+        "description": "[external:combined] Create campaign with objective and budget. Created in PAUSED status.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "access_token": {
+              "type": "string",
+              "description": "Facebook access token. Optional when FB_ACCESS_TOKEN is set in .env."
+            },
+            "ad_account_id": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "objective": {
+              "type": "string",
+              "enum": [
+                "OUTCOME_AWARENESS",
+                "OUTCOME_ENGAGEMENT",
+                "OUTCOME_LEADS",
+                "OUTCOME_SALES",
+                "OUTCOME_TRAFFIC",
+                "OUTCOME_APP_PROMOTION"
+              ]
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "ACTIVE",
+                "PAUSED"
+              ],
+              "default": "PAUSED"
+            },
+            "daily_budget": {
+              "type": "string"
+            },
+            "lifetime_budget": {
+              "type": "string"
+            },
+            "special_ad_categories": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "ad_account_id",
+            "name",
+            "objective"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "combined__ads_create_ad_set",
+        "description": "[external:combined] Create ad set with targeting, placement, schedule.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "access_token": {
+              "type": "string",
+              "description": "Facebook access token. Optional when FB_ACCESS_TOKEN is set in .env."
+            },
+            "ad_account_id": {
+              "type": "string"
+            },
+            "campaign_id": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "daily_budget": {
+              "type": "string"
+            },
+            "targeting": {
+              "type": "object"
+            },
+            "optimization_goal": {
+              "type": "string"
+            },
+            "billing_event": {
+              "type": "string"
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "ACTIVE",
+                "PAUSED"
+              ],
+              "default": "PAUSED"
+            }
+          },
+          "required": [
+            "ad_account_id",
+            "campaign_id",
+            "name",
+            "billing_event",
+            "optimization_goal",
+            "targeting"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "combined__ads_create_ad",
+        "description": "[external:combined] Create ad linking creative to ad set.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "access_token": {
+              "type": "string",
+              "description": "Facebook access token. Optional when FB_ACCESS_TOKEN is set in .env."
+            },
+            "ad_account_id": {
+              "type": "string"
+            },
+            "adset_id": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "creative": {
+              "type": "object"
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "ACTIVE",
+                "PAUSED"
+              ],
+              "default": "PAUSED"
+            }
+          },
+          "required": [
+            "ad_account_id",
+            "adset_id",
+            "name",
+            "creative"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "combined__ads_update_entity",
+        "description": "[external:combined] Modify campaigns, ad sets, or ads.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "access_token": {
+              "type": "string",
+              "description": "Facebook access token. Optional when FB_ACCESS_TOKEN is set in .env."
+            },
+            "entity_id": {
+              "type": "string"
+            },
+            "entity_type": {
+              "type": "string",
+              "enum": [
+                "campaign",
+                "adset",
+                "ad"
+              ]
+            },
+            "name": {
+              "type": "string"
+            },
+            "status": {
+              "type": "string"
+            },
+            "daily_budget": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "entity_id",
+            "entity_type"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "combined__ads_activate_entity",
+        "description": "[external:combined] Activate a paused campaign, ad set, or ad.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "access_token": {
+              "type": "string",
+              "description": "Facebook access token. Optional when FB_ACCESS_TOKEN is set in .env."
+            },
+            "entity_id": {
+              "type": "string"
+            },
+            "entity_type": {
+              "type": "string",
+              "enum": [
+                "campaign",
+                "adset",
+                "ad"
+              ]
+            }
+          },
+          "required": [
+            "entity_id",
+            "entity_type"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "combined__ads_get_ad_accounts",
+        "description": "[external:combined] List accessible ad accounts.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "access_token": {
+              "type": "string",
+              "description": "Facebook access token. Optional when FB_ACCESS_TOKEN is set in .env."
+            },
+            "user_id": {
+              "type": "string"
+            }
+          },
+          "required": []
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "combined__ads_get_ad_entities",
+        "description": "[external:combined] Retrieve campaigns, ad sets, ads under an account.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "access_token": {
+              "type": "string",
+              "description": "Facebook access token. Optional when FB_ACCESS_TOKEN is set in .env."
+            },
+            "ad_account_id": {
+              "type": "string"
+            },
+            "entity_type": {
+              "type": "string",
+              "enum": [
+                "campaign",
+                "adset",
+                "ad",
+                "all"
+              ],
+              "default": "all"
+            },
+            "status": {
+              "type": "string"
+            },
+            "limit": {
+              "type": "integer",
+              "default": 25
+            }
+          },
+          "required": [
+            "ad_account_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "combined__ads_get_pages_for_business",
+        "description": "[external:combined] Display connected Facebook Pages.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "access_token": {
+              "type": "string",
+              "description": "Facebook access token. Optional when FB_ACCESS_TOKEN is set in .env."
+            },
+            "business_id": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "business_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "combined__ads_create_catalog",
+        "description": "[external:combined] Create product catalog for dynamic ads.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "access_token": {
+              "type": "string",
+              "description": "Facebook access token. Optional when FB_ACCESS_TOKEN is set in .env."
+            },
+            "business_id": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "vertical": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "business_id",
+            "name",
+            "vertical"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "combined__ads_create_product_feed",
+        "description": "[external:combined] Create data feed for product uploads.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "access_token": {
+              "type": "string",
+              "description": "Facebook access token. Optional when FB_ACCESS_TOKEN is set in .env."
+            },
+            "catalog_id": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "feed_url": {
+              "type": "string"
+            },
+            "schedule": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "catalog_id",
+            "name",
+            "feed_url"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "combined__ads_upload_products",
+        "description": "[external:combined] Upload products to catalog.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "access_token": {
+              "type": "string",
+              "description": "Facebook access token. Optional when FB_ACCESS_TOKEN is set in .env."
+            },
+            "catalog_id": {
+              "type": "string"
+            },
+            "products": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              }
+            }
+          },
+          "required": [
+            "catalog_id",
+            "products"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "combined__ads_get_catalog",
+        "description": "[external:combined] Get catalog details.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "access_token": {
+              "type": "string",
+              "description": "Facebook access token. Optional when FB_ACCESS_TOKEN is set in .env."
+            },
+            "catalog_id": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "catalog_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "combined__ads_get_product",
+        "description": "[external:combined] Get product details.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "access_token": {
+              "type": "string",
+              "description": "Facebook access token. Optional when FB_ACCESS_TOKEN is set in .env."
+            },
+            "catalog_id": {
+              "type": "string"
+            },
+            "product_id": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "catalog_id",
+            "product_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "combined__ads_get_products",
+        "description": "[external:combined] List products in catalog.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "access_token": {
+              "type": "string",
+              "description": "Facebook access token. Optional when FB_ACCESS_TOKEN is set in .env."
+            },
+            "catalog_id": {
+              "type": "string"
+            },
+            "limit": {
+              "type": "integer",
+              "default": 25
+            }
+          },
+          "required": [
+            "catalog_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "combined__ads_get_product_feed",
+        "description": "[external:combined] Get product feed details.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "access_token": {
+              "type": "string",
+              "description": "Facebook access token. Optional when FB_ACCESS_TOKEN is set in .env."
+            },
+            "feed_id": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "feed_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "combined__ads_get_product_feed_upload",
+        "description": "[external:combined] Get feed upload history.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "access_token": {
+              "type": "string",
+              "description": "Facebook access token. Optional when FB_ACCESS_TOKEN is set in .env."
+            },
+            "feed_id": {
+              "type": "string"
+            },
+            "limit": {
+              "type": "integer",
+              "default": 10
+            }
+          },
+          "required": [
+            "feed_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "combined__ads_get_product_set",
+        "description": "[external:combined] Get product set details.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "access_token": {
+              "type": "string",
+              "description": "Facebook access token. Optional when FB_ACCESS_TOKEN is set in .env."
+            },
+            "product_set_id": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "product_set_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "combined__ads_get_product_sets",
+        "description": "[external:combined] List product sets in catalog.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "access_token": {
+              "type": "string",
+              "description": "Facebook access token. Optional when FB_ACCESS_TOKEN is set in .env."
+            },
+            "catalog_id": {
+              "type": "string"
+            },
+            "limit": {
+              "type": "integer",
+              "default": 25
+            }
+          },
+          "required": [
+            "catalog_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "combined__ads_get_datasets",
+        "description": "[external:combined] List datasets in account.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "access_token": {
+              "type": "string",
+              "description": "Facebook access token. Optional when FB_ACCESS_TOKEN is set in .env."
+            },
+            "ad_account_id": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "ad_account_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "combined__ads_get_dataset_quality",
+        "description": "[external:combined] Get signal health for dataset.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "access_token": {
+              "type": "string",
+              "description": "Facebook access token. Optional when FB_ACCESS_TOKEN is set in .env."
+            },
+            "dataset_id": {
+              "type": "string"
+            },
+            "date_preset": {
+              "type": "string",
+              "default": "last_30d"
+            }
+          },
+          "required": [
+            "dataset_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "combined__ads_get_pixel",
+        "description": "[external:combined] Get pixel details and health.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "access_token": {
+              "type": "string",
+              "description": "Facebook access token. Optional when FB_ACCESS_TOKEN is set in .env."
+            },
+            "pixel_id": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "pixel_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "combined__ads_get_pixel_stats",
+        "description": "[external:combined] Get pixel event statistics.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "access_token": {
+              "type": "string",
+              "description": "Facebook access token. Optional when FB_ACCESS_TOKEN is set in .env."
+            },
+            "pixel_id": {
+              "type": "string"
+            },
+            "date_preset": {
+              "type": "string",
+              "default": "last_30d"
+            }
+          },
+          "required": [
+            "pixel_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "combined__ads_insights_advertiser_context",
+        "description": "[external:combined] Get industry and geographic context.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "access_token": {
+              "type": "string",
+              "description": "Facebook access token. Optional when FB_ACCESS_TOKEN is set in .env."
+            },
+            "ad_account_id": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "ad_account_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "combined__ads_insights_anomaly_signal",
+        "description": "[external:combined] Flag KPI deviations from baseline.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "access_token": {
+              "type": "string",
+              "description": "Facebook access token. Optional when FB_ACCESS_TOKEN is set in .env."
+            },
+            "ad_account_id": {
+              "type": "string"
+            },
+            "entity_type": {
+              "type": "string"
+            },
+            "entity_id": {
+              "type": "string"
+            },
+            "metrics": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "ad_account_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "combined__ads_insights_auction_ranking_benchmarks",
+        "description": "[external:combined] Compare CTR, CPM, quality ranking.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "access_token": {
+              "type": "string",
+              "description": "Facebook access token. Optional when FB_ACCESS_TOKEN is set in .env."
+            },
+            "ad_account_id": {
+              "type": "string"
+            },
+            "entity_type": {
+              "type": "string"
+            },
+            "entity_id": {
+              "type": "string"
+            },
+            "date_preset": {
+              "type": "string",
+              "default": "last_30d"
+            }
+          },
+          "required": [
+            "ad_account_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "combined__ads_insights_industry_benchmark",
+        "description": "[external:combined] Compare against industry averages.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "access_token": {
+              "type": "string",
+              "description": "Facebook access token. Optional when FB_ACCESS_TOKEN is set in .env."
+            },
+            "ad_account_id": {
+              "type": "string"
+            },
+            "industry": {
+              "type": "string"
+            },
+            "metrics": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "ad_account_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "combined__ads_insights_performance_trend",
+        "description": "[external:combined] Historical metric trajectory.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "access_token": {
+              "type": "string",
+              "description": "Facebook access token. Optional when FB_ACCESS_TOKEN is set in .env."
+            },
+            "ad_account_id": {
+              "type": "string"
+            },
+            "entity_type": {
+              "type": "string"
+            },
+            "start_date": {
+              "type": "string"
+            },
+            "end_date": {
+              "type": "string"
+            },
+            "time_increment": {
+              "type": "string",
+              "default": "7"
+            }
+          },
+          "required": [
+            "ad_account_id",
+            "start_date",
+            "end_date"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "combined__ads_get_opportunity_score",
+        "description": "[external:combined] Get Meta's opportunity score.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "access_token": {
+              "type": "string",
+              "description": "Facebook access token. Optional when FB_ACCESS_TOKEN is set in .env."
+            },
+            "ad_account_id": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "ad_account_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "combined__ads_get_help_article",
+        "description": "[external:combined] Search Meta Business Help Center.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "access_token": {
+              "type": "string",
+              "description": "Facebook access token. Optional when FB_ACCESS_TOKEN is set in .env."
+            },
+            "query": {
+              "type": "string"
+            },
+            "category": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "query"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "combined__stackoverflow_search",
+        "description": "[external:combined] Search Stack Overflow questions by keyword. Returns titles, scores, views, answers, tags, links.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "description": "Search query"
+            },
+            "sort": {
+              "type": "string",
+              "enum": [
+                "relevance",
+                "votes",
+                "creation",
+                "activity"
+              ],
+              "default": "relevance"
+            },
+            "size": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10
+            }
+          },
+          "required": [
+            "query"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "combined__stackoverflow_get_question",
+        "description": "[external:combined] Get a full Stack Overflow question with body, answers, tags, score.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "question_id": {
+              "type": "integer",
+              "description": "Question ID (e.g. 11227809)"
+            }
+          },
+          "required": [
+            "question_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "combined__stackoverflow_get_answers",
+        "description": "[external:combined] Get all answers for a Stack Overflow question, sorted by votes.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "question_id": {
+              "type": "integer",
+              "description": "Question ID"
+            },
+            "size": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10
+            }
+          },
+          "required": [
+            "question_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "combined__stackoverflow_search_by_tag",
+        "description": "[external:combined] Search questions filtered by tag(s).",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "tag": {
+              "type": "string",
+              "description": "Single tag (e.g. 'javascript')"
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Multiple tags"
+            },
+            "sort": {
+              "type": "string",
+              "enum": [
+                "votes",
+                "creation",
+                "activity",
+                "unanswered"
+              ],
+              "default": "votes"
+            },
+            "size": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10
+            }
+          },
+          "required": []
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "combined__stackoverflow_get_tag_info",
+        "description": "[external:combined] Get info about a Stack Overflow tag (count, synonyms, wiki).",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "tag_name": {
+              "type": "string",
+              "description": "Tag name"
+            }
+          },
+          "required": [
+            "tag_name"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "combined__stackoverflow_get_trending",
+        "description": "[external:combined] Get trending/popular questions on Stack Overflow.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "size": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50,
+              "default": 10
+            }
+          },
+          "required": []
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "combined__weather_current",
+        "description": "[external:combined] Get current weather for a location (temp, humidity, wind, conditions).",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "latitude": {
+              "type": "number"
+            },
+            "longitude": {
+              "type": "number"
+            },
+            "city": {
+              "type": "string",
+              "description": "City name (auto-geocoded)"
+            }
+          },
+          "required": []
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "combined__weather_forecast",
+        "description": "[external:combined] Get weather forecast up to 16 days (daily or hourly).",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "latitude": {
+              "type": "number"
+            },
+            "longitude": {
+              "type": "number"
+            },
+            "city": {
+              "type": "string"
+            },
+            "days": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 16,
+              "default": 7
+            }
+          },
+          "required": []
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "combined__weather_alerts",
+        "description": "[external:combined] Get severe weather alerts for a location.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "latitude": {
+              "type": "number"
+            },
+            "longitude": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "latitude",
+            "longitude"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "combined__weather_historical",
+        "description": "[external:combined] Get historical weather data for a date range (past data).",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "latitude": {
+              "type": "number"
+            },
+            "longitude": {
+              "type": "number"
+            },
+            "start_date": {
+              "type": "string",
+              "description": "YYYY-MM-DD"
+            },
+            "end_date": {
+              "type": "string",
+              "description": "YYYY-MM-DD"
+            }
+          },
+          "required": [
+            "latitude",
+            "longitude",
+            "start_date",
+            "end_date"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "combined__weather_geocode",
+        "description": "[external:combined] Convert city name to coordinates.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "city": {
+              "type": "string"
+            },
+            "count": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 10,
+              "default": 1
+            }
+          },
+          "required": [
+            "city"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "combined__wikipedia_search",
+        "description": "[external:combined] Search Wikipedia articles by keyword.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string"
+            },
+            "language": {
+              "type": "string",
+              "default": "en"
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50,
+              "default": 10
+            }
+          },
+          "required": [
+            "query"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "combined__wikipedia_get_summary",
+        "description": "[external:combined] Get a quick summary of a Wikipedia article.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "language": {
+              "type": "string",
+              "default": "en"
+            }
+          },
+          "required": [
+            "title"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "combined__wikipedia_get_article",
+        "description": "[external:combined] Get full content of a Wikipedia article as plain text.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "language": {
+              "type": "string",
+              "default": "en"
+            }
+          },
+          "required": [
+            "title"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "combined__wikipedia_get_sections",
+        "description": "[external:combined] Get section structure of a Wikipedia article.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "language": {
+              "type": "string",
+              "default": "en"
+            }
+          },
+          "required": [
+            "title"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "combined__wikipedia_get_links",
+        "description": "[external:combined] Get internal links from a Wikipedia article.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "language": {
+              "type": "string",
+              "default": "en"
+            },
+            "limit": {
+              "type": "integer",
+              "default": 50
+            }
+          },
+          "required": [
+            "title"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "combined__wikipedia_get_random",
+        "description": "[external:combined] Get a random Wikipedia article.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "language": {
+              "type": "string",
+              "default": "en"
+            }
+          },
+          "required": []
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "combined__wikipedia_get_categories",
+        "description": "[external:combined] Get categories of a Wikipedia article.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "language": {
+              "type": "string",
+              "default": "en"
+            }
+          },
+          "required": [
+            "title"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "combined__country_search",
+        "description": "[external:combined] Search countries by name. Returns flag, capital, currency, population, languages, timezones.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "Country name (e.g. 'Bangladesh')"
+            }
+          },
+          "required": [
+            "name"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "combined__country_get_by_code",
+        "description": "[external:combined] Get country info by 2-letter code (e.g. BD, US, GB).",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "code": {
+              "type": "string",
+              "description": "ISO 3166-1 alpha-2 code"
+            }
+          },
+          "required": [
+            "code"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "combined__country_list_all",
+        "description": "[external:combined] List all countries with basic info (name, code, capital, region).",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "region": {
+              "type": "string",
+              "description": "Filter by region: Africa, Americas, Asia, Europe, Oceania"
+            },
+            "limit": {
+              "type": "integer",
+              "default": 50
+            }
+          },
+          "required": []
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "combined__currency_convert",
+        "description": "[external:combined] Convert amount from one currency to another using ECB rates.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "from": {
+              "type": "string",
+              "description": "Source currency (e.g. USD)"
+            },
+            "to": {
+              "type": "string",
+              "description": "Target currency (e.g. BDT)"
+            },
+            "amount": {
+              "type": "number",
+              "default": 1
+            }
+          },
+          "required": [
+            "from",
+            "to"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "combined__currency_rates",
+        "description": "[external:combined] Get exchange rates for a base currency.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "base": {
+              "type": "string",
+              "default": "USD",
+              "description": "Base currency"
+            },
+            "symbols": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Target currencies (e.g. ['EUR','GBP'])"
+            }
+          },
+          "required": []
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "combined__currency_list",
+        "description": "[external:combined] List all supported currencies.",
+        "parameters": {
+          "type": "object",
+          "properties": {},
+          "required": []
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "combined__crypto_price",
+        "description": "[external:combined] Get live price of cryptocurrencies (BTC, ETH, etc.) in multiple currencies.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "coins": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Coin IDs (e.g. ['bitcoin','ethereum'])"
+            },
+            "currencies": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "default": [
+                "usd"
+              ],
+              "description": "Fiat currencies"
+            }
+          },
+          "required": [
+            "coins"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "combined__crypto_search",
+        "description": "[external:combined] Search for a cryptocurrency by name or symbol.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "description": "Search query"
+            }
+          },
+          "required": [
+            "query"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "combined__crypto_market",
+        "description": "[external:combined] Get top cryptocurrencies by market cap.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10
+            },
+            "currency": {
+              "type": "string",
+              "default": "usd"
+            }
+          },
+          "required": []
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "combined__ip_lookup",
+        "description": "[external:combined] Get geolocation info from IP address (country, city, ISP, coordinates).",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "ip": {
+              "type": "string",
+              "description": "IP address (empty = your IP)"
+            }
+          },
+          "required": []
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "combined__qr_generate",
+        "description": "[external:combined] Generate a QR code image URL from text or URL.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "text": {
+              "type": "string",
+              "description": "Text or URL to encode"
+            },
+            "size": {
+              "type": "integer",
+              "default": 300,
+              "description": "Image size in pixels"
+            },
+            "format": {
+              "type": "string",
+              "enum": [
+                "png",
+                "svg",
+                "gif"
+              ],
+              "default": "png"
+            }
+          },
+          "required": [
+            "text"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "facebook-ads__ads_create_campaign",
+        "description": "[external:facebook-ads] Create campaign with objective and budget. Created in PAUSED status.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "access_token": {
+              "type": "string",
+              "description": "Facebook access token. Optional when FB_ACCESS_TOKEN is set in .env."
+            },
+            "ad_account_id": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "objective": {
+              "type": "string",
+              "enum": [
+                "OUTCOME_AWARENESS",
+                "OUTCOME_ENGAGEMENT",
+                "OUTCOME_LEADS",
+                "OUTCOME_SALES",
+                "OUTCOME_TRAFFIC",
+                "OUTCOME_APP_PROMOTION"
+              ]
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "ACTIVE",
+                "PAUSED"
+              ],
+              "default": "PAUSED"
+            },
+            "daily_budget": {
+              "type": "string"
+            },
+            "lifetime_budget": {
+              "type": "string"
+            },
+            "special_ad_categories": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "ad_account_id",
+            "name",
+            "objective"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "facebook-ads__ads_create_ad_set",
+        "description": "[external:facebook-ads] Create ad set with targeting, placement, schedule.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "access_token": {
+              "type": "string",
+              "description": "Facebook access token. Optional when FB_ACCESS_TOKEN is set in .env."
+            },
+            "ad_account_id": {
+              "type": "string"
+            },
+            "campaign_id": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "daily_budget": {
+              "type": "string"
+            },
+            "targeting": {
+              "type": "object"
+            },
+            "optimization_goal": {
+              "type": "string"
+            },
+            "billing_event": {
+              "type": "string"
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "ACTIVE",
+                "PAUSED"
+              ],
+              "default": "PAUSED"
+            }
+          },
+          "required": [
+            "ad_account_id",
+            "campaign_id",
+            "name",
+            "billing_event",
+            "optimization_goal",
+            "targeting"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "facebook-ads__ads_create_ad",
+        "description": "[external:facebook-ads] Create ad linking creative to ad set.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "access_token": {
+              "type": "string",
+              "description": "Facebook access token. Optional when FB_ACCESS_TOKEN is set in .env."
+            },
+            "ad_account_id": {
+              "type": "string"
+            },
+            "adset_id": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "creative": {
+              "type": "object"
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "ACTIVE",
+                "PAUSED"
+              ],
+              "default": "PAUSED"
+            }
+          },
+          "required": [
+            "ad_account_id",
+            "adset_id",
+            "name",
+            "creative"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "facebook-ads__ads_update_entity",
+        "description": "[external:facebook-ads] Modify campaigns, ad sets, or ads.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "access_token": {
+              "type": "string",
+              "description": "Facebook access token. Optional when FB_ACCESS_TOKEN is set in .env."
+            },
+            "entity_id": {
+              "type": "string"
+            },
+            "entity_type": {
+              "type": "string",
+              "enum": [
+                "campaign",
+                "adset",
+                "ad"
+              ]
+            },
+            "name": {
+              "type": "string"
+            },
+            "status": {
+              "type": "string"
+            },
+            "daily_budget": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "entity_id",
+            "entity_type"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "facebook-ads__ads_activate_entity",
+        "description": "[external:facebook-ads] Activate a paused campaign, ad set, or ad.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "access_token": {
+              "type": "string",
+              "description": "Facebook access token. Optional when FB_ACCESS_TOKEN is set in .env."
+            },
+            "entity_id": {
+              "type": "string"
+            },
+            "entity_type": {
+              "type": "string",
+              "enum": [
+                "campaign",
+                "adset",
+                "ad"
+              ]
+            }
+          },
+          "required": [
+            "entity_id",
+            "entity_type"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "facebook-ads__ads_get_ad_accounts",
+        "description": "[external:facebook-ads] List accessible ad accounts.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "access_token": {
+              "type": "string",
+              "description": "Facebook access token. Optional when FB_ACCESS_TOKEN is set in .env."
+            },
+            "user_id": {
+              "type": "string"
+            }
+          },
+          "required": []
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "facebook-ads__ads_get_ad_entities",
+        "description": "[external:facebook-ads] Retrieve campaigns, ad sets, ads under an account.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "access_token": {
+              "type": "string",
+              "description": "Facebook access token. Optional when FB_ACCESS_TOKEN is set in .env."
+            },
+            "ad_account_id": {
+              "type": "string"
+            },
+            "entity_type": {
+              "type": "string",
+              "enum": [
+                "campaign",
+                "adset",
+                "ad",
+                "all"
+              ],
+              "default": "all"
+            },
+            "status": {
+              "type": "string"
+            },
+            "limit": {
+              "type": "integer",
+              "default": 25
+            }
+          },
+          "required": [
+            "ad_account_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "facebook-ads__ads_get_pages_for_business",
+        "description": "[external:facebook-ads] Display connected Facebook Pages.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "access_token": {
+              "type": "string",
+              "description": "Facebook access token. Optional when FB_ACCESS_TOKEN is set in .env."
+            },
+            "business_id": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "business_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "facebook-ads__ads_create_catalog",
+        "description": "[external:facebook-ads] Create product catalog for dynamic ads.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "access_token": {
+              "type": "string",
+              "description": "Facebook access token. Optional when FB_ACCESS_TOKEN is set in .env."
+            },
+            "business_id": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "vertical": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "business_id",
+            "name",
+            "vertical"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "facebook-ads__ads_create_product_feed",
+        "description": "[external:facebook-ads] Create data feed for product uploads.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "access_token": {
+              "type": "string",
+              "description": "Facebook access token. Optional when FB_ACCESS_TOKEN is set in .env."
+            },
+            "catalog_id": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "feed_url": {
+              "type": "string"
+            },
+            "schedule": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "catalog_id",
+            "name",
+            "feed_url"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "facebook-ads__ads_upload_products",
+        "description": "[external:facebook-ads] Upload products to catalog.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "access_token": {
+              "type": "string",
+              "description": "Facebook access token. Optional when FB_ACCESS_TOKEN is set in .env."
+            },
+            "catalog_id": {
+              "type": "string"
+            },
+            "products": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              }
+            }
+          },
+          "required": [
+            "catalog_id",
+            "products"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "facebook-ads__ads_get_catalog",
+        "description": "[external:facebook-ads] Get catalog details.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "access_token": {
+              "type": "string",
+              "description": "Facebook access token. Optional when FB_ACCESS_TOKEN is set in .env."
+            },
+            "catalog_id": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "catalog_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "facebook-ads__ads_get_product",
+        "description": "[external:facebook-ads] Get product details.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "access_token": {
+              "type": "string",
+              "description": "Facebook access token. Optional when FB_ACCESS_TOKEN is set in .env."
+            },
+            "catalog_id": {
+              "type": "string"
+            },
+            "product_id": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "catalog_id",
+            "product_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "facebook-ads__ads_get_products",
+        "description": "[external:facebook-ads] List products in catalog.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "access_token": {
+              "type": "string",
+              "description": "Facebook access token. Optional when FB_ACCESS_TOKEN is set in .env."
+            },
+            "catalog_id": {
+              "type": "string"
+            },
+            "limit": {
+              "type": "integer",
+              "default": 25
+            }
+          },
+          "required": [
+            "catalog_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "facebook-ads__ads_get_product_feed",
+        "description": "[external:facebook-ads] Get product feed details.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "access_token": {
+              "type": "string",
+              "description": "Facebook access token. Optional when FB_ACCESS_TOKEN is set in .env."
+            },
+            "feed_id": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "feed_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "facebook-ads__ads_get_product_feed_upload",
+        "description": "[external:facebook-ads] Get feed upload history.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "access_token": {
+              "type": "string",
+              "description": "Facebook access token. Optional when FB_ACCESS_TOKEN is set in .env."
+            },
+            "feed_id": {
+              "type": "string"
+            },
+            "limit": {
+              "type": "integer",
+              "default": 10
+            }
+          },
+          "required": [
+            "feed_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "facebook-ads__ads_get_product_set",
+        "description": "[external:facebook-ads] Get product set details.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "access_token": {
+              "type": "string",
+              "description": "Facebook access token. Optional when FB_ACCESS_TOKEN is set in .env."
+            },
+            "product_set_id": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "product_set_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "facebook-ads__ads_get_product_sets",
+        "description": "[external:facebook-ads] List product sets in catalog.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "access_token": {
+              "type": "string",
+              "description": "Facebook access token. Optional when FB_ACCESS_TOKEN is set in .env."
+            },
+            "catalog_id": {
+              "type": "string"
+            },
+            "limit": {
+              "type": "integer",
+              "default": 25
+            }
+          },
+          "required": [
+            "catalog_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "facebook-ads__ads_get_datasets",
+        "description": "[external:facebook-ads] List datasets in account.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "access_token": {
+              "type": "string",
+              "description": "Facebook access token. Optional when FB_ACCESS_TOKEN is set in .env."
+            },
+            "ad_account_id": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "ad_account_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "facebook-ads__ads_get_dataset_quality",
+        "description": "[external:facebook-ads] Get signal health for dataset.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "access_token": {
+              "type": "string",
+              "description": "Facebook access token. Optional when FB_ACCESS_TOKEN is set in .env."
+            },
+            "dataset_id": {
+              "type": "string"
+            },
+            "date_preset": {
+              "type": "string",
+              "default": "last_30d"
+            }
+          },
+          "required": [
+            "dataset_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "facebook-ads__ads_get_pixel",
+        "description": "[external:facebook-ads] Get pixel details and health.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "access_token": {
+              "type": "string",
+              "description": "Facebook access token. Optional when FB_ACCESS_TOKEN is set in .env."
+            },
+            "pixel_id": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "pixel_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "facebook-ads__ads_get_pixel_stats",
+        "description": "[external:facebook-ads] Get pixel event statistics.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "access_token": {
+              "type": "string",
+              "description": "Facebook access token. Optional when FB_ACCESS_TOKEN is set in .env."
+            },
+            "pixel_id": {
+              "type": "string"
+            },
+            "date_preset": {
+              "type": "string",
+              "default": "last_30d"
+            }
+          },
+          "required": [
+            "pixel_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "facebook-ads__ads_insights_advertiser_context",
+        "description": "[external:facebook-ads] Get industry and geographic context.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "access_token": {
+              "type": "string",
+              "description": "Facebook access token. Optional when FB_ACCESS_TOKEN is set in .env."
+            },
+            "ad_account_id": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "ad_account_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "facebook-ads__ads_insights_anomaly_signal",
+        "description": "[external:facebook-ads] Flag KPI deviations from baseline.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "access_token": {
+              "type": "string",
+              "description": "Facebook access token. Optional when FB_ACCESS_TOKEN is set in .env."
+            },
+            "ad_account_id": {
+              "type": "string"
+            },
+            "entity_type": {
+              "type": "string"
+            },
+            "entity_id": {
+              "type": "string"
+            },
+            "metrics": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "ad_account_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "facebook-ads__ads_insights_auction_ranking_benchmarks",
+        "description": "[external:facebook-ads] Compare CTR, CPM, quality ranking.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "access_token": {
+              "type": "string",
+              "description": "Facebook access token. Optional when FB_ACCESS_TOKEN is set in .env."
+            },
+            "ad_account_id": {
+              "type": "string"
+            },
+            "entity_type": {
+              "type": "string"
+            },
+            "entity_id": {
+              "type": "string"
+            },
+            "date_preset": {
+              "type": "string",
+              "default": "last_30d"
+            }
+          },
+          "required": [
+            "ad_account_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "facebook-ads__ads_insights_industry_benchmark",
+        "description": "[external:facebook-ads] Compare against industry averages.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "access_token": {
+              "type": "string",
+              "description": "Facebook access token. Optional when FB_ACCESS_TOKEN is set in .env."
+            },
+            "ad_account_id": {
+              "type": "string"
+            },
+            "industry": {
+              "type": "string"
+            },
+            "metrics": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "ad_account_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "facebook-ads__ads_insights_performance_trend",
+        "description": "[external:facebook-ads] Historical metric trajectory.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "access_token": {
+              "type": "string",
+              "description": "Facebook access token. Optional when FB_ACCESS_TOKEN is set in .env."
+            },
+            "ad_account_id": {
+              "type": "string"
+            },
+            "entity_type": {
+              "type": "string"
+            },
+            "start_date": {
+              "type": "string"
+            },
+            "end_date": {
+              "type": "string"
+            },
+            "time_increment": {
+              "type": "string",
+              "default": "7"
+            }
+          },
+          "required": [
+            "ad_account_id",
+            "start_date",
+            "end_date"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "facebook-ads__ads_get_opportunity_score",
+        "description": "[external:facebook-ads] Get Meta's opportunity score.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "access_token": {
+              "type": "string",
+              "description": "Facebook access token. Optional when FB_ACCESS_TOKEN is set in .env."
+            },
+            "ad_account_id": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "ad_account_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "facebook-ads__ads_get_help_article",
+        "description": "[external:facebook-ads] Search Meta Business Help Center.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "access_token": {
+              "type": "string",
+              "description": "Facebook access token. Optional when FB_ACCESS_TOKEN is set in .env."
+            },
+            "query": {
+              "type": "string"
+            },
+            "category": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "query"
+          ]
+        }
+      }
     }
   ],
   "models": [
     {
-      "id": "deepseek-v4-flash-free",
-      "object": "model",
-      "provider": "OpenCode",
-      "kind": "provider"
-    },
-    {
-      "id": "mimo-v2.5-free",
-      "object": "model",
-      "provider": "OpenCode",
-      "kind": "provider"
-    },
-    {
-      "id": "big-pickle",
-      "object": "model",
-      "provider": "OpenCode",
-      "kind": "provider"
-    },
-    {
-      "id": "hy3-free",
-      "object": "model",
-      "provider": "OpenCode",
-      "kind": "provider"
-    },
-    {
-      "id": "nemotron-3-ultra-free",
-      "object": "model",
-      "provider": "OpenCode",
-      "kind": "provider"
-    },
-    {
-      "id": "north-mini-code-free",
+      "id": "opencode:default",
       "object": "model",
       "provider": "OpenCode",
       "kind": "provider"
@@ -909,13 +3997,61 @@
       "kind": "provider"
     },
     {
-      "id": "qwen/qwen3.6-27b",
+      "id": "qwen/qwen3.8-27b",
       "object": "model",
       "provider": "Groq",
       "kind": "provider"
     },
     {
-      "id": "groq/compound-mini",
+      "id": "openai/gpt-oss-20b",
+      "object": "model",
+      "provider": "Groq",
+      "kind": "provider"
+    },
+    {
+      "id": "meta-llama/llama-prompt-guard-2-86m",
+      "object": "model",
+      "provider": "Groq",
+      "kind": "provider"
+    },
+    {
+      "id": "canopylabs/orpheus-arabic-saudi",
+      "object": "model",
+      "provider": "Groq",
+      "kind": "provider"
+    },
+    {
+      "id": "openai/gpt-oss-safeguard-20b",
+      "object": "model",
+      "provider": "Groq",
+      "kind": "provider"
+    },
+    {
+      "id": "allam-2-7b",
+      "object": "model",
+      "provider": "Groq",
+      "kind": "provider"
+    },
+    {
+      "id": "canopylabs/orpheus-v1-english",
+      "object": "model",
+      "provider": "Groq",
+      "kind": "provider"
+    },
+    {
+      "id": "meta-llama/llama-prompt-guard-2-22m",
+      "object": "model",
+      "provider": "Groq",
+      "kind": "provider"
+    },
+    {
+      "id": "whisper-large-v3-turbo",
+      "object": "model",
+      "provider": "Groq",
+      "kind": "provider"
+    },
+    {
+      "id": "whisper-large-v3",
       "object": "model",
       "provider": "Groq",
       "kind": "provider"
@@ -1245,109 +4381,13 @@
       "kind": "provider"
     },
     {
-      "id": "nemotron-3-super",
+      "id": "qwen2.5:1.5b",
       "object": "model",
       "provider": "Ollama",
       "kind": "provider"
     },
     {
-      "id": "glm-5.2",
-      "object": "model",
-      "provider": "Ollama",
-      "kind": "provider"
-    },
-    {
-      "id": "kimi-k2.7-code",
-      "object": "model",
-      "provider": "Ollama",
-      "kind": "provider"
-    },
-    {
-      "id": "gpt-oss:20b",
-      "object": "model",
-      "provider": "Ollama",
-      "kind": "provider"
-    },
-    {
-      "id": "minimax-m2.7",
-      "object": "model",
-      "provider": "Ollama",
-      "kind": "provider"
-    },
-    {
-      "id": "kimi-k3",
-      "object": "model",
-      "provider": "Ollama",
-      "kind": "provider"
-    },
-    {
-      "id": "gemma4:31b",
-      "object": "model",
-      "provider": "Ollama",
-      "kind": "provider"
-    },
-    {
-      "id": "gpt-oss:120b",
-      "object": "model",
-      "provider": "Ollama",
-      "kind": "provider"
-    },
-    {
-      "id": "nemotron-3-nano:30b",
-      "object": "model",
-      "provider": "Ollama",
-      "kind": "provider"
-    },
-    {
-      "id": "nemotron-3-ultra",
-      "object": "model",
-      "provider": "Ollama",
-      "kind": "provider"
-    },
-    {
-      "id": "glm-5.3",
-      "object": "model",
-      "provider": "Ollama",
-      "kind": "provider"
-    },
-    {
-      "id": "deepseek-v4-pro:0813",
-      "object": "model",
-      "provider": "Ollama",
-      "kind": "provider"
-    },
-    {
-      "id": "minimax-m3",
-      "object": "model",
-      "provider": "Ollama",
-      "kind": "provider"
-    },
-    {
-      "id": "deepseek-v4.1-flash",
-      "object": "model",
-      "provider": "Ollama",
-      "kind": "provider"
-    },
-    {
-      "id": "mistral-large-3:675b",
-      "object": "model",
-      "provider": "Ollama",
-      "kind": "provider"
-    },
-    {
-      "id": "glm-5.3-flash",
-      "object": "model",
-      "provider": "Ollama",
-      "kind": "provider"
-    },
-    {
-      "id": "kimi-k2.6",
-      "object": "model",
-      "provider": "Ollama",
-      "kind": "provider"
-    },
-    {
-      "id": "mistral-large-4",
+      "id": "deepseek-r1:1.5b",
       "object": "model",
       "provider": "Ollama",
       "kind": "provider"
@@ -1355,7 +4395,19 @@
     {
       "id": "llama3-groq-tool-use:8b",
       "object": "model",
-      "provider": "custom_3",
+      "provider": "Colab-GPU",
+      "kind": "provider"
+    },
+    {
+      "id": "qwen2.5:7b",
+      "object": "model",
+      "provider": "Colab-GPU",
+      "kind": "provider"
+    },
+    {
+      "id": "qwen2.5:1.5b",
+      "object": "model",
+      "provider": "Colab-GPU",
       "kind": "provider"
     },
     {
@@ -1365,7 +4417,37 @@
       "kind": "provider"
     },
     {
+      "id": "mission:code-guru",
+      "object": "model",
+      "provider": "mission-barisal",
+      "kind": "provider"
+    },
+    {
+      "id": "mission:bug-hunter",
+      "object": "model",
+      "provider": "mission-barisal",
+      "kind": "provider"
+    },
+    {
+      "id": "mission:security-hero",
+      "object": "model",
+      "provider": "mission-barisal",
+      "kind": "provider"
+    },
+    {
+      "id": "mission:perf-wizard",
+      "object": "model",
+      "provider": "mission-barisal",
+      "kind": "provider"
+    },
+    {
       "id": "mission:doc-king",
+      "object": "model",
+      "provider": "mission-barisal",
+      "kind": "provider"
+    },
+    {
+      "id": "mission:qa-tyrant",
       "object": "model",
       "provider": "mission-barisal",
       "kind": "provider"
@@ -1387,94 +4469,64 @@
       "object": "model",
       "provider": "mission-barisal",
       "kind": "provider"
-    },
-    {
-      "id": "mission:bug-hunter",
-      "object": "model",
-      "provider": "mission-barisal",
-      "kind": "provider"
-    },
-    {
-      "id": "mission:code-guru",
-      "object": "model",
-      "provider": "mission-barisal",
-      "kind": "provider"
-    },
-    {
-      "id": "mission:perf-wizard",
-      "object": "model",
-      "provider": "mission-barisal",
-      "kind": "provider"
-    },
-    {
-      "id": "mission:qa-tyrant",
-      "object": "model",
-      "provider": "mission-barisal",
-      "kind": "provider"
-    },
-    {
-      "id": "mission:security-hero",
-      "object": "model",
-      "provider": "mission-barisal",
-      "kind": "provider"
     }
   ],
   "agents": [
     {
-      "id": "doc-king",
-      "name": "Documentation King - Halim",
-      "role": "documentation",
-      "model": "mistral-small:free"
-    },
-    {
-      "id": "team-heart",
-      "name": "Team Heart - Jara",
-      "role": "general",
-      "model": "mistral/leanstral-1-5"
-    },
-    {
-      "id": "customer-experience-specialist",
-      "name": "Customer Experience Specialist",
-      "role": "customer-experience",
-      "model": "gpt-oss:120b"
-    },
-    {
-      "id": "ecommerce-operations-analyst",
-      "name": "E-Commerce Operations Analyst",
-      "role": "ecommerce-operations",
-      "model": "qwen3:free"
+      "id": "code-guru",
+      "name": "কোড গুরু - মনু",
+      "role": "architecture",
+      "model": "deepseek-r1:1.5b"
     },
     {
       "id": "bug-hunter",
-      "name": "Bug Hunter - Jewel",
+      "name": "বাগ হান্টার - জুয়েল",
       "role": "debugging",
-      "model": "llama3.1:8b"
-    },
-    {
-      "id": "code-guru",
-      "name": "Code Guru - Monu",
-      "role": "architecture",
-      "model": "llama-local"
-    },
-    {
-      "id": "perf-wizard",
-      "name": "Performance Wizard - Rashed",
-      "role": "performance",
-      "model": "nemotron-3-nano:30b"
-    },
-    {
-      "id": "qa-tyrant",
-      "name": "Quality Tyrant - Mojnu",
-      "role": "quality",
-      "model": "glm-4.7-flash:free"
+      "model": "llama3-groq-tool-use:8b"
     },
     {
       "id": "security-hero",
-      "name": "Security Hero - Bablu",
+      "name": "সিকিউরিটি হিরো - বাবলু",
       "role": "security",
-      "model": "north-mini-code:free"
+      "model": "qwen/qwen3.8-27b"
+    },
+    {
+      "id": "perf-wizard",
+      "name": "পারফরম্যান্স উইজার্ড - রাশেদ",
+      "role": "performance",
+      "model": "openai/gpt-oss-120b"
+    },
+    {
+      "id": "doc-king",
+      "name": "ডকুমেন্টেশন রাজা - হালিম",
+      "role": "documentation",
+      "model": "deepseek-r1:1.5b"
+    },
+    {
+      "id": "qa-tyrant",
+      "name": "কোয়ালিটি তস্কর - মজনু",
+      "role": "quality",
+      "model": "gemini-2.5-flash"
+    },
+    {
+      "id": "team-heart",
+      "name": "টিম হার্ট - জারা",
+      "role": "general",
+      "model": "qwen2.5:1.5b"
+    },
+    {
+      "id": "customer-experience-specialist",
+      "name": "কাস্টমার এক্সপেরিয়েন্স স্পেশালিস্ট",
+      "role": "customer-experience",
+      "model": "gemini-2.5-flash-lite"
+    },
+    {
+      "id": "ecommerce-operations-analyst",
+      "name": "ই-কমার্স অপারেশনস অ্যানালিস্ট",
+      "role": "ecommerce-operations",
+      "model": "gemini-3.6-flash"
     }
   ],
-  "generated_utc": "2026-10-08T20:30:40Z",
+  "generated_utc": "2026-10-11T23:26:27Z",
   "generator": "tools/gen-openai-docs.js (live gateway)"
 }
