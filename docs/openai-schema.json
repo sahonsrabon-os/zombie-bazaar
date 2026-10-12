@@ -4009,37 +4009,13 @@
       "kind": "provider"
     },
     {
-      "id": "meta-llama/llama-prompt-guard-2-86m",
-      "object": "model",
-      "provider": "Groq",
-      "kind": "provider"
-    },
-    {
       "id": "canopylabs/orpheus-arabic-saudi",
       "object": "model",
       "provider": "Groq",
       "kind": "provider"
     },
     {
-      "id": "openai/gpt-oss-safeguard-20b",
-      "object": "model",
-      "provider": "Groq",
-      "kind": "provider"
-    },
-    {
       "id": "allam-2-7b",
-      "object": "model",
-      "provider": "Groq",
-      "kind": "provider"
-    },
-    {
-      "id": "canopylabs/orpheus-v1-english",
-      "object": "model",
-      "provider": "Groq",
-      "kind": "provider"
-    },
-    {
-      "id": "meta-llama/llama-prompt-guard-2-22m",
       "object": "model",
       "provider": "Groq",
       "kind": "provider"
@@ -4052,6 +4028,30 @@
     },
     {
       "id": "whisper-large-v3",
+      "object": "model",
+      "provider": "Groq",
+      "kind": "provider"
+    },
+    {
+      "id": "meta-llama/llama-prompt-guard-2-86m",
+      "object": "model",
+      "provider": "Groq",
+      "kind": "provider"
+    },
+    {
+      "id": "openai/gpt-oss-safeguard-20b",
+      "object": "model",
+      "provider": "Groq",
+      "kind": "provider"
+    },
+    {
+      "id": "canopylabs/orpheus-v1-english",
+      "object": "model",
+      "provider": "Groq",
+      "kind": "provider"
+    },
+    {
+      "id": "meta-llama/llama-prompt-guard-2-22m",
       "object": "model",
       "provider": "Groq",
       "kind": "provider"
@@ -4476,7 +4476,7 @@
       "id": "code-guru",
       "name": "কোড গুরু - মনু",
       "role": "architecture",
-      "model": "deepseek-r1:1.5b"
+      "model": "llama3-groq-tool-use:8b"
     },
     {
       "id": "bug-hunter",
@@ -4512,7 +4512,7 @@
       "id": "team-heart",
       "name": "টিম হার্ট - জারা",
       "role": "general",
-      "model": "qwen2.5:1.5b"
+      "model": "deepseek-r1:1.5b"
     },
     {
       "id": "customer-experience-specialist",
@@ -4527,6 +4527,6 @@
       "model": "gemini-3.6-flash"
     }
   ],
-  "generated_utc": "2026-10-11T23:26:27Z",
+  "generated_utc": "2026-10-12T02:50:02Z",
   "generator": "tools/gen-openai-docs.js (live gateway)"
 }
